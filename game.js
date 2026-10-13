@@ -37,6 +37,7 @@
   }
   function drawFighters() {
     document.body.dataset.screen = state;
+    $('player-nameplate').hidden = true; $('enemy-nameplate').hidden = true;
     window.arena3d?.setLocation(state === 'camp', hero ? chapterIndex(hero.wins) : 0);
     const data = hero || { color: selectedColor, style: selectedClass, weapon: 0, armor: 0 };
     window.arena3d?.setFighters(
@@ -86,6 +87,8 @@
     const s = stats();
     $('champion-summary').textContent = `${hero.name} · Level ${hero.level} ${CLASSES[hero.style].label}`;
     $('stats-summary').textContent = `${s.attack} ATK / ${s.defense} DEF / ${s.hp} HP`;
+    $('player-nameplate').textContent = `${hero.name} · Lv. ${hero.level} ${CLASSES[hero.style].label}`;
+    $('enemy-nameplate').textContent = enemy ? `${enemy.name} · Rival` : '';
     $('gold').textContent = hero.gold; $('xp').textContent = `${hero.xp} / 60 XP`;
     $('player-name').textContent = hero.name; $('player-level').textContent = `LV. ${hero.level}`;
     $('player-health').textContent = `${Math.max(0, heroHp)} / ${s.hp}`; $('player-health-bar').style.width = `${clamp(heroHp / s.hp, 0, 1) * 100}%`;
@@ -325,9 +328,27 @@
     });
     if (hero.ending) $('town-dialog-content').append(element('h3', '', ENDINGS[hero.ending].title), element('p', '', ENDINGS[hero.ending].text));
   }
+  function renderCharacter() {
+    const rank = hero.wins >= 12 ? 'Champion of the Free' : hero.wins >= 9 ? 'Arena Legend' : hero.wins >= 6 ? 'Crowd Favorite' : hero.wins >= 3 ? 'Proven Gladiator' : 'Arena Initiate';
+    shopHeading(hero.name, `LEVEL ${hero.level} ${CLASSES[hero.style].label.toUpperCase()} · ${rank.toUpperCase()}`, 'Your reputation is earned in the arena. Your equipment tells the rest of the story.');
+    const content = $('town-dialog-content');
+    const progress = element('progress', 'character-xp'); progress.max = 60; progress.value = hero.xp; progress.setAttribute('aria-label', 'Experience toward next level');
+    content.append(element('p', '', `${hero.xp} / 60 XP · ${60 - hero.xp} XP to level ${hero.level + 1}`), progress);
+    const grid = element('div', 'character-stats');
+    for (const [label, value] of Object.entries(stats())) {
+      const card = element('div', 'character-stat'); card.append(element('strong', '', String(value)), element('span', '', { hp: 'Health', attack: 'Attack', defense: 'Defense', energy: 'Energy' }[label])); grid.append(card);
+    }
+    content.append(grid, element('h3', '', 'Equipped gear'));
+    for (const kind of ['weapon', 'armor', 'shield']) {
+      const item = CATALOG[kind][hero[kind]], card = element('article', 'job-card');
+      card.append(element('span', 'eyebrow', kind.toUpperCase()), element('h3', '', item.name), element('p', '', itemStats(item))); content.append(card);
+    }
+    content.append(element('h3', '', 'Reputation & milestones'), element('p', '', `${rank} · ${hero.wins}/12 rivals defeated · ${hero.claimedJobs.length}/${JOBS.length} jobs collected · ${hero.training}/6 endurance lessons`));
+    const button = element('button', 'primary', 'VISIT BRANN’S FORGE →'); button.addEventListener('click', () => { townPlace = 'blacksmith'; renderTown(); }); content.append(button);
+  }
   function renderTown() {
     $('town-dialog-content').replaceChildren();
-    ({ blacksmith: renderSmith, tavern: renderTavern, training: renderTraining, journal: renderJournal })[townPlace]();
+    ({ character: renderCharacter, blacksmith: renderSmith, tavern: renderTavern, training: renderTraining, journal: renderJournal })[townPlace]();
   }
   document.querySelectorAll('[data-place]').forEach(button => button.addEventListener('click', () => {
     if (state !== 'camp') return; townPlace = button.dataset.place; renderTown(); $('town-dialog').showModal();

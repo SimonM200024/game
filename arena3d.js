@@ -29,7 +29,7 @@ import * as THREE from 'three';
   const materials = new Map();
   const material = (color, metalness = 0, roughness = .85) => {
     const key = `${color}/${metalness}/${roughness}`;
-    if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, metalness, roughness, flatShading: true }));
+    if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, metalness, roughness, flatShading: false }));
     return materials.get(key);
   };
   let seed = 817;
@@ -40,7 +40,7 @@ import * as THREE from 'three';
     object.castShadow = true; object.receiveShadow = true; parent.add(object); return object;
   }
   const box = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.BoxGeometry(...size), color, pos, null, metal);
-  const sphere = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.SphereGeometry(1, 10, 8), color, pos, size, metal);
+  const sphere = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.SphereGeometry(1, 24, 16), color, pos, size, metal);
   const cylinder = (parent, top, bottom, height, color, pos, metal = 0, sides = 12) => mesh(parent, new THREE.CylinderGeometry(top, bottom, height, sides), color, pos, null, metal);
 
   // A locally generated sand texture, with no image downloads or runtime CDN.
@@ -177,7 +177,13 @@ import * as THREE from 'three';
   cylinder(smith, .5, .4, .85, '#be9368', [0, 1.35, 0]);
   box(smith, [.75, .85, .08], '#684431', [0, 1.22, .4]);
   sphere(smith, [.3, .36, .29], '#c79870', [0, 2.03, 0]);
-  mesh(smith, new THREE.ConeGeometry(.25, .38, 7), '#574031', [0, 1.82, .23]);
+  sphere(smith, [.23, .21, .12], '#574031', [0, 1.87, .21]);
+  sphere(smith, [.065, .09, .075], '#c79870', [0, 2.02, .29]);
+  for (const side of [-1, 1]) {
+    sphere(smith, [.05, .027, .018], '#302820', [side * .12, 2.12, .26]);
+    sphere(smith, [.11, .13, .1], '#bd8d62', [side * .57, .94, .03]);
+  }
+  mesh(smith, new THREE.SphereGeometry(.305, 20, 12, 0, Math.PI * 2, 0, Math.PI * .45), '#574031', [0, 2.11, -.035]);
   for (const side of [-1, 1]) cylinder(smith, .14, .12, .73, '#bd8d62', [side * .57, 1.35, 0]);
   box(smith, [.07, .48, .07], '#715036', [.6, 1.12, .15]); box(smith, [.35, .18, .2], '#606062', [.6, 1.4, .15], .7);
 
@@ -204,36 +210,50 @@ import * as THREE from 'three';
     }
     cylinder(rig, .43, .4, .13, '#9c7840', [0, 1.28, 0], .65);
     box(rig, [.2, .16, .08], '#e0bd65', [0, 1.28, .43], .7);
-    cylinder(rig, .47, .37, .78, data.armor ? bronze : cloth, [0, 1.72, 0], data.armor ? .45 : 0);
-    for (const sign of [-1, 1]) sphere(rig, [.25, .24, .14], data.armor ? bronze : cloth, [sign * .22, 1.91, .31], data.armor ? .45 : 0);
+    sphere(rig, [.46, .47, .34], data.armor ? bronze : cloth, [0, 1.72, 0], data.armor ? .45 : 0);
+    for (const sign of [-1, 1]) sphere(rig, [.23, .16, .055], data.armor ? bronze : cloth, [sign * .20, 1.91, .28], data.armor ? .45 : 0);
     for (let i = 0; i < 3; i++) box(rig, [.44, .035, .05], '#c4a362', [0, 1.5 + i * .13, .38], .4);
     cylinder(rig, .15, .17, .23, skin, [0, 2.19, 0]);
     const head = new THREE.Group(); head.position.y = 2.5; rig.add(head);
-    sphere(head, [.31, .36, .29], skin, [0, 0, 0]);
-    sphere(head, [.08, .13, .1], skin, [0, -.025, .29]);
+    // Smaller skull, tapered jaw, cheekbones and inset eyes instead of a toy face.
+    head.scale.set(.78, .86, .85);
+    sphere(head, [.29, .34, .265], skin, [0, .025, -.02]);
+    sphere(head, [.235, .19, .235], skin, [0, -.16, .025]);
+    sphere(head, [.16, .095, .15], skin, [0, -.275, .075]);
+    sphere(head, [.047, .115, .065], skin, [0, -.015, .245]);
+    sphere(head, [.066, .044, .07], skin, [0, -.087, .277]);
     for (const sign of [-1, 1]) {
-      box(head, [.09, .048, .03], '#28201a', [sign * .13, .065, .263]);
-      const brow = box(head, [.12, .045, .05], '#4b3322', [sign * .13, .125, .255]); brow.rotation.z = sign * .18;
-      sphere(head, [.095, .12, .07], skin, [sign * .3, -.03, .01]);
+      sphere(head, [.09, .047, .036], '#855c43', [sign * .12, .045, .237]);
+      sphere(head, [.065, .028, .024], '#e6dac8', [sign * .12, .047, .264]);
+      sphere(head, [.025, .028, .014], '#493b2b', [sign * .116, .048, .285]);
+      sphere(head, [.011, .019, .009], '#211b18', [sign * .116, .048, .296]);
+      const brow = sphere(head, [.09, .02, .025], '#483329', [sign * .12, .107, .249]); brow.rotation.z = sign * .12;
+      sphere(head, [.066, .10, .047], skin, [sign * .29, -.045, -.01]);
+      sphere(head, [.09, .07, .04], skin, [sign * .17, -.08, .218]);
     }
-    box(head, [.12, .027, .025], '#75422d', [0, -.16, .262]);
-    mesh(head, new THREE.SphereGeometry(.37, 12, 8, 0, Math.PI * 2, 0, Math.PI * .55), bronze, [0, .075, -.035], [1, 1, 1], .65);
-    cylinder(head, .37, .37, .095, '#d7b46b', [0, .1, -.035], .65);
-    for (const sign of [-1, 1]) {
-      const cheek = box(head, [.105, .33, .22], bronze, [sign * .275, -.10, .10], .55); cheek.rotation.z = sign * -.2;
-    }
-    box(head, [.075, .32, .10], '#d0aa5b', [0, .08, .3], .65);
-    for (let i = 0; i < 9; i++) {
-      const angle = -.9 + i / 8 * 1.8;
-      const plume = box(head, [.14, .25, .085], cloth, [0, .35 + Math.cos(angle) * .15, Math.sin(angle) * .32 - .06]); plume.rotation.x = angle * .7;
+    sphere(head, [.085, .017, .016], '#915d4b', [0, -.193, .235]);
+    sphere(head, [.075, .013, .015], '#bd8770', [0, -.215, .235]);
+    // Open helmets leave the face visible. Unarmored recruits wear short hair.
+    mesh(head, new THREE.SphereGeometry(.305, 24, 16, 0, Math.PI * 2, 0, Math.PI * .48), data.armor ? bronze : '#423028', [0, .1, -.035], [1, 1, 1], data.armor ? .5 : 0);
+    if (data.armor) {
+      cylinder(head, .31, .31, .05, '#d7b46b', [0, .13, -.035], .6, 24);
+      for (const side of [-1, 1]) {
+        const cheek = box(head, [.055, .25, .15], bronze, [side * .28, -.09, .02], .5); cheek.rotation.z = side * -.15;
+      }
+      if (data.armor > 1) for (let i = 0; i < 9; i++) {
+        const angle = -.9 + i / 8 * 1.8;
+        const plume = box(head, [.10, .18, .075], cloth, [0, .35 + Math.cos(angle) * .1, Math.sin(angle) * .27 - .06]); plume.rotation.x = angle * .7;
+      }
     }
     const arms = [];
     for (const sign of [-1, 1]) {
       const arm = new THREE.Group(); arm.position.set(sign * .53, 2, 0); rig.add(arm); arms.push(arm);
-      sphere(arm, [.26, .2, .28], bronze, [0, 0, 0], .55);
-      cylinder(arm, .145, .12, .47, skin, [0, -.3, 0]);
+      sphere(arm, [.19, .22, .20], data.armor ? bronze : skin, [0, -.035, 0], data.armor ? .45 : 0);
+      sphere(arm, [.135, .25, .14], skin, [0, -.27, 0]);
+      sphere(arm, [.115, .11, .115], skin, [0, -.47, .02]);
       cylinder(arm, .13, .16, .25, leather, [0, -.61, .05]);
-      sphere(arm, [.14, .14, .15], skin, [0, -.78, .09]);
+      sphere(arm, [.095, .135, .10], skin, [0, -.78, .09]);
+      sphere(arm, [.045, .085, .05], skin, [-sign * .085, -.76, .13]);
       arm.rotation.z = sign * .13;
     }
     const shield = new THREE.Group(); shield.scale.setScalar(1 + Math.min(data.shield || 0, 3) * .07); shield.position.set(0, -.48, .2); arms[0].add(shield);
@@ -251,7 +271,7 @@ import * as THREE from 'three';
     const shadowTexture = new THREE.CanvasTexture(shadowCanvas);
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2, 1.6), new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .025; root.add(shadow);
     const size = data.style === 'brute' ? 1.1 : data.style === 'duelist' ? .94 : 1;
-    rig.scale.set(size, data.style === 'brute' ? 1.05 : 1, size);
+    rig.scale.set(size * .82, data.style === 'brute' ? 1.14 : 1.1, size * .88);
     return { root, rig, arms, legs, head, sword, shield, enemy, event: null, hitAt: -10, shadowTexture, shadow, size };
   }
   const fighters = { player: null, enemy: null };
@@ -313,12 +333,13 @@ import * as THREE from 'three';
       fighter.root.position.set(baseX, 0, 0);
       fighter.rig.position.y = reduced ? 0 : Math.sin(graphicsTime * 2.2 + (enemy ? 2 : 0)) * .024;
       // Model forward is +Z. Face exactly along the arena's X axis toward the opponent.
-      fighter.rig.rotation.set(0, creating ? -.25 : enemy ? -Math.PI / 2 : Math.PI / 2, 0);
+      fighter.rig.rotation.set(0, creating || townLocation ? -.25 : enemy ? -Math.PI / 2 : Math.PI / 2, 0);
       fighter.arms[0].rotation.x = element.classList.contains('guarding') ? -1.1 : -.18;
       fighter.arms[1].rotation.x = creating ? -.32 : .1;
       fighter.sword.rotation.x = creating ? .15 : .9;
       fighter.sword.rotation.z = creating ? -.5 : -.1;
-      fighter.legs[0].rotation.x = 0; fighter.legs[1].rotation.x = 0;
+      fighter.legs[0].rotation.x = creating || townLocation ? .04 : .12; fighter.legs[1].rotation.x = creating || townLocation ? -.04 : -.12;
+      fighter.head.rotation.y = reduced ? 0 : Math.sin(graphicsTime * .7) * .035;
       if (fighter.event) {
         const progress = (graphicsTime - fighter.event.start) / .53;
         if (progress < 1) {
@@ -333,6 +354,12 @@ import * as THREE from 'three';
       if (element.classList.contains('fallen')) { fighter.rig.rotation.z = enemy ? -1.2 : 1.2; fighter.rig.position.y = .15; }
       // Project damage labels from the actual 3D positions instead of fixed percentages.
       const point = new THREE.Vector3(fighter.root.position.x, 3.1, 0).project(camera);
+      const nameplate = document.getElementById(`${side}-nameplate`);
+      if (nameplate) {
+        nameplate.hidden = (creating && !townLocation) || (enemy && townLocation);
+        nameplate.style.left = `${(point.x * .5 + .5) * arena.clientWidth}px`;
+        nameplate.style.top = `${(-point.y * .5 + .5) * arena.clientHeight - 20}px`;
+      }
       const label = document.getElementById(`${side}-float`); label.style.left = `${(point.x * .5 + .5) * arena.clientWidth}px`; label.style.top = `${(-point.y * .5 + .5) * arena.clientHeight}px`; label.style.right = 'auto';
     }
     renderer.render(scene, camera);
