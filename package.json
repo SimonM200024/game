@@ -6,9 +6,13 @@
   "scripts": {
     "test": "node tests/browser.cjs",
     "test:classes": "node tests/browser.cjs soldier && node tests/browser.cjs brute && node tests/browser.cjs duelist",
-    "check": "node --check game.js && node --check starfall/game.js"
+    "check": "node --check game.js && node --check arena3d.js && node --check starfall/game.js",
+    "build:graphics": "esbuild arena3d.js --bundle --minify --format=iife --outfile=assets/arena3d.bundle.js --legal-comments=linked",
+    "test:graphics": "node tests/graphics.cjs"
   },
   "devDependencies": {
-    "playwright": "1.64.0"
+    "esbuild": "^0.28.2",
+    "playwright": "1.64.0",
+    "three": "^0.186.1"
   }
 }

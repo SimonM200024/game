@@ -5,17 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#201916">
   <title>Dust & Glory — The Little Gladiator RPG</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=3d-1">
+  <link rel="stylesheet" href="fullscreen.css?v=3d-1">
 </head>
 <body>
   <div class="app">
     <header class="masthead">
       <a class="wordmark" href="./"><span class="crest">⚔</span><span>DUST <i>&</i> GLORY<small>THE LITTLE GLADIATOR RPG</small></span></a>
-      <nav aria-label="Game settings"><a href="starfall/">Play Starfall</a><button id="sound" aria-pressed="false">Sound off</button><button id="help">How to play</button></nav>
+      <nav aria-label="Game settings"><a href="starfall/">Play Starfall</a><button id="sound" aria-pressed="false">Sound off</button><button id="help">How to play</button><button id="fullscreen" aria-pressed="false">Fullscreen</button></nav>
     </header>
 
     <main>
-      <div class="chapter-line"><span><b class="live-dot"></b> THE SUNBLEACHED ARENA</span><span id="chapter">YOUR LEGEND STARTS IN THE DIRT</span></div>
+      <div class="chapter-line"><span><b class="live-dot"></b> THE SUNBLEACHED ARENA <em id="graphics-status">ILLUSTRATED MODE</em></span><span id="chapter">YOUR LEGEND STARTS IN THE DIRT</span></div>
       <section class="arena-shell" aria-label="Gladiator arena">
         <div class="arena" id="arena">
           <svg class="arena-art" viewBox="0 0 1200 580" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -66,6 +68,7 @@
     </main>
   </div>
   <dialog id="help-dialog"><button id="close-help" class="close-button" aria-label="Close instructions">×</button><span class="eyebrow">A SURVIVAL GUIDE</span><h2>Win the crowd.<br>Keep your head.</h2><p>Defeat all six arena opponents. Each move you make gives your opponent a turn. Read their next move above the arena before you act.</p><ul><li><b>Quick strike:</b> accurate, free attack.</li><li><b>Heavy blow:</b> stronger, but can miss. Costs 3 energy.</li><li><b>Guard:</b> blocks 70% of the next hit and restores 2 energy.</li><li><b>Catch breath:</b> restores 4 energy, but leaves you open.</li><li><b>Glory strike:</b> powerful and accurate. Costs 5 energy; three-turn cooldown.</li><li><b>Bandage:</b> heals up to 30 health. Two per fight.</li></ul><p>Victories earn gold and XP. Buy gear between fights. Health, energy, and bandages refill for every bout. Defeat costs no gold—you can retry. Progress saves between bouts in this browser.</p><button id="help-done" class="primary">GOT IT. LET’S FIGHT.</button></dialog>
-  <script src="game.js"></script>
+  <script src="assets/arena3d.bundle.js?v=3d-1"></script>
+  <script src="game.js?v=3d-1"></script>
 </body>
 </html>

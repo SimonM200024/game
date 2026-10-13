@@ -2,10 +2,11 @@ const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const { existsSync, mkdirSync } = require('node:fs');
 mkdirSync('test-results', { recursive: true });
+// Campaign rules use the illustrated renderer; test:graphics exercises real WebGL separately.
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:8000';
 const fightingStyle = process.argv[2] || 'soldier';
 (async () => {
- const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),args:['--no-sandbox','--disable-webgl']});
  const page=await browser.newPage({viewport:{width:1440,height:1100}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.clock.install();
  await page.addInitScript(()=>{let seed=87;Math.random=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}});

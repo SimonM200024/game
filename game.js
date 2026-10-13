@@ -43,7 +43,12 @@
     </g></svg>`;
   }
   function drawFighters() {
+    document.body.dataset.screen = state;
     const data = hero || { color: selectedColor, style: selectedClass, weapon: 0, armor: 0 };
+    window.arena3d?.setFighters(
+      { color: COLORS[data.color], style: data.style, weapon: data.weapon, armor: data.armor },
+      enemy ? { color: enemy.color, style: enemy.style, weapon: Math.min(hero.wins, 3), armor: Math.min(Math.floor(hero.wins / 2), 3) } : null
+    );
     $('player-figure').innerHTML = avatar(COLORS[data.color], data.style, data.weapon, data.armor);
     if (enemy) $('enemy-figure').innerHTML = avatar(enemy.color, enemy.style, Math.min(hero.wins, 3), Math.min(Math.floor(hero.wins / 2), 3), true);
   }
@@ -83,6 +88,7 @@
     osc.connect(gain); gain.connect(audio.destination); osc.start(); osc.stop(audio.currentTime + length);
   }
   function animate(id, className) {
+    if (id.endsWith('-figure')) window.arena3d?.animate(id.startsWith('player') ? 'player' : 'enemy', className);
     const element = $(id); element.classList.remove(className); void element.offsetWidth; element.classList.add(className);
     setTimeout(() => element.classList.remove(className), 850);
   }
@@ -267,5 +273,17 @@
   });
   $('help').addEventListener('click', () => $('help-dialog').showModal());
   $('close-help').addEventListener('click', () => $('help-dialog').close()); $('help-done').addEventListener('click', () => $('help-dialog').close());
+  const fullscreenButton = $('fullscreen');
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      else { fullscreenButton.textContent = 'Screen filled'; fullscreenButton.title = 'This browser does not support fullscreen. The game already fills the window.'; }
+    } catch { fullscreenButton.textContent = 'Use browser fullscreen'; fullscreenButton.title = 'Fullscreen was blocked by the browser. The game still fills the window.'; }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    fullscreenButton.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+    fullscreenButton.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
+  });
   $('arena').classList.add('creating'); drawFighters();
 })();
