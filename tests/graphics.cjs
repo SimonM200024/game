@@ -13,7 +13,7 @@ mkdirSync('test-results', { recursive: true });
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(baseUrl);
       await page.waitForFunction(() => Boolean(window.arena3d));
-      assert.equal(await page.locator('#graphics-status').textContent(), '3D ARENA');
+      assert.equal(await page.locator('#graphics-status').textContent(), 'ANIME WORLD');
       const bounds = await page.locator('#arena-3d').boundingBox();
       assert.equal(bounds.width, width);
       assert.equal(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth), false);

@@ -338,7 +338,11 @@
         for (const other of controls.children) other.setAttribute('aria-pressed', String(other === button));
       }); controls.append(button);
     }
-    portrait.append(controls);
+    const turn = element('button', 'portrait-turn', 'Turn character'); turn.type = 'button'; turn.setAttribute('aria-pressed','false');
+    turn.addEventListener('click', () => {
+      const turned = viewport.classList.toggle('turned'); turn.setAttribute('aria-pressed',String(turned));
+    });
+    portrait.append(controls,turn);
 
     const progress = element('progress', 'character-xp'); progress.max = 60; progress.value = hero.xp; progress.setAttribute('aria-label', 'Experience toward next level');
     content.append(element('p', '', `${hero.xp} / 60 XP · ${60 - hero.xp} XP to level ${hero.level + 1}`), progress);

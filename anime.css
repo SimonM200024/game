@@ -1,0 +1,49 @@
+/* Painted fantasy world, jewel tones, and light parchment accents. */
+:root { --anime-ink:#122b3c; --anime-gold:#e7c488; --anime-teal:#498b8b; }
+body { background:#142c3b; }
+.masthead { background:linear-gradient(100deg,#162e40,#203b48); border-bottom:1px solid #decba178; }
+.wordmark { color:#fff0d2; }
+.crest { background:#355968; border-color:#cfb777; }
+.masthead nav button:last-child { background:#335763; border-color:#cdb27e; }
+.arena { background:#bcd9d9 url('assets/world/arena.png') center/cover; }
+body[data-screen="camp"] .arena { background-image:url('assets/world/town.png'); }
+.arena-art { opacity:0; }
+.arena::after { background:linear-gradient(#14263444,transparent 22%,transparent 65%,#12263777); }
+.creator,.game-panel { background:linear-gradient(135deg,#142f40f5,#183842f5); border:1px solid #e2c48b8c; border-radius:15px 4px 15px 4px; box-shadow:0 15px 45px #081e3455,inset 0 1px #fff2; }
+.creator-heading h1,.camp-heading h2 { color:#fff0d4; }
+.creator input { background:#0f2537; border-color:#a4b6b46b; color:#fff0d4; }
+.class-card { background:#264958; border-color:#8aa4a177; color:#f1dfbd; }
+.class-card.selected { background:#496c72; border-color:#f0d6a0; }
+.primary { background:linear-gradient(135deg,#c6a063,#97723f); color:#fff8df; border-color:#eed69f; box-shadow:0 3px 0 #664d2c; }
+.primary:hover { background:linear-gradient(135deg,#d5b579,#ab8550); }
+.fighter-card { background:linear-gradient(120deg,#132d40f5,#244754f5); border-color:#d3ba87; border-radius:12px 3px 12px 3px; }
+.health-track { background:#172835; border-color:#719a8a; }
+.health-track div { background:linear-gradient(90deg,#3d9789,#a8d5a0); }
+.enemy-card .health-track div { background:linear-gradient(90deg,#ac566b,#ec9a91); }
+.world-nameplate { background:#142f40ed; border-radius:12px 3px; }
+.intent { background:#173c4dee; border-color:#bdd3c3aa; }
+.story-brief { background:#b5d3c20c; border-color:#92b1a74d; border-left-color:#dbbc82; }
+.story-brief p,.camp-heading p { color:#c9d9d6; }
+.town-destinations>button { background:linear-gradient(130deg,#355a68,#233c4d); border-color:#9cb4aa77; border-bottom-color:#88a59b; border-radius:10px 3px; }
+.town-destinations>button:hover { background:#426a76; border-color:#efcd89; }
+.town-destinations small { color:#bfd1cb; }
+.actions button { background:linear-gradient(145deg,#355a68,#1d3749); border-color:#86aaa677; border-radius:10px 3px; }
+.actions button:not(:disabled):hover { background:#436f7a; border-color:#e4c487; transform:translateY(-2px); }
+.actions button b { color:#fff0d1; }
+.actions button span { color:#bdcfc9; }
+.actions button:disabled { opacity:.55; }
+.battle-log { color:#c0d2cc; border-top-color:#8aacaa44; }
+.town-dialog,.story-dialog,#help-dialog { background:radial-gradient(ellipse at top left,#365a67,#132b3d 75%); border-color:#d5b884; color:#f4e4c4; border-radius:16px 4px; }
+.character-dialog { background:radial-gradient(ellipse at 25% 35%,#446b78,#142e40 65%); }
+.equipment-card,.job-card,.journal-chapter { background:#244453; border-color:#8eaaa577; }
+.equipment-card.equipped { border-color:#f2d89c; }
+.equipment-card p,.job-card p,.merchant-heading p { color:#c4d4cf; }
+.merchant-tabs button { background:#1c3a4b; border-color:#739699; color:#d4e1d5; }
+.merchant-tabs button.selected { background:#537c80; border-color:#e5c791; }
+.portrait-art-viewport { --portrait-facing:1; }
+.portrait-art { transform:scaleX(var(--portrait-facing)); transition:transform .45s cubic-bezier(.22,.8,.2,1); }
+.portrait-art-viewport.turned { --portrait-facing:-1; }
+.portrait-art-viewport.zoomed .portrait-art { transform:scaleX(var(--portrait-facing)) scale(1.85); }
+.portrait-turn { flex-shrink:0; align-self:center; margin:8px 0; padding:7px 18px; border:1px solid #b4c3b666; border-radius:20px; color:#e8dbba; background:#193746; font-size:11px; }
+.character-portrait { padding-bottom:0; }
+@media(prefers-reduced-motion:reduce) { .portrait-art,.actions button { transition:none; } .actions button:not(:disabled):hover { transform:none; } }

@@ -19,174 +19,13 @@ import * as THREE from 'three';
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#e7c89a');
   scene.fog = new THREE.Fog('#e7c89a', 22, 67);
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 110);
-  const light = new THREE.DirectionalLight('#fff0d0', 2.6);
-  light.position.set(-7, 15, 8); light.castShadow = true;
-  light.shadow.mapSize.set(2048, 2048);
-  Object.assign(light.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: .5, far: 50 });
-  light.shadow.normalBias = .035; light.shadow.bias = -.00015;
-  scene.add(light, new THREE.HemisphereLight('#d5e4ef', '#493b30', 1.3));
-  const rim = new THREE.DirectionalLight('#ffba74', 2); rim.position.set(3, 7, -9); scene.add(rim);
-  const materials = new Map();
-  const material = (color, metalness = 0, roughness = .85) => {
-    const key = `${color}/${metalness}/${roughness}`;
-    if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, metalness, roughness, flatShading: false }));
-    return materials.get(key);
-  };
-  let seed = 817;
-  const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-  function mesh(parent, geometry, color, position, scale, metalness = 0) {
-    const object = new THREE.Mesh(geometry, material(color, metalness, metalness ? .35 : .85));
-    if (position) object.position.set(...position); if (scale) object.scale.set(...scale);
-    object.castShadow = true; object.receiveShadow = true; parent.add(object); return object;
-  }
-  const box = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.BoxGeometry(...size), color, pos, null, metal);
-  const sphere = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.SphereGeometry(1, 24, 16), color, pos, size, metal);
-  const cylinder = (parent, top, bottom, height, color, pos, metal = 0, sides = 12) => mesh(parent, new THREE.CylinderGeometry(top, bottom, height, sides), color, pos, null, metal);
-
-  // A locally generated sand texture, with no image downloads or runtime CDN.
-  const textureCanvas = document.createElement('canvas'); textureCanvas.width = textureCanvas.height = 512;
-  const paint = textureCanvas.getContext('2d'); paint.fillStyle = '#b99868'; paint.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 14000; i++) {
-    paint.fillStyle = random() > .5 ? '#dcc093' : '#997c54'; paint.globalAlpha = random() * .3;
-    paint.fillRect(random() * 512, random() * 512, random() * 3 + .5, random() * 2 + .5);
-  }
-  const sandMap = new THREE.CanvasTexture(textureCanvas); sandMap.wrapS = sandMap.wrapT = THREE.RepeatWrapping; sandMap.repeat.set(7, 7); sandMap.colorSpace = THREE.SRGBColorSpace;
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(43, 96), new THREE.MeshStandardMaterial({ map: sandMap, roughness: 1 }));
-  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-  const arenaSet = new THREE.Group(); scene.add(arenaSet);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(6.9, 7, 90), material('#a2865c')); ring.rotation.x = -Math.PI / 2; ring.position.y = .015; arenaSet.add(ring);
-  const inner = new THREE.Mesh(new THREE.RingGeometry(3.5, 3.54, 90), material('#b39669')); inner.rotation.x = -Math.PI / 2; inner.position.y = .016; arenaSet.add(inner);
-
-  // Open-front colosseum: stepped seating, stone archways, banners and a crowd.
-  for (let i = 0; i < 25; i++) {
-    const angle = Math.PI * .47 + i / 24 * Math.PI * 1.06;
-    const wall = new THREE.Group(); wall.position.set(Math.sin(angle) * 12, 0, Math.cos(angle) * 12); wall.rotation.y = angle; arenaSet.add(wall);
-    box(wall, [1.8, 1.15, 1], '#aa865e', [0, .57, 0]);
-    box(wall, [1.96, .18, 1.16], '#d6b382', [0, 1.24, 0]);
-    for (let row = 0; row < 3; row++) {
-      box(wall, [1.95, .58, .95], row % 2 ? '#b49a75' : '#bd9f76', [0, 1.45 + row * .55, .7 + row * .75]);
-    }
-    box(wall, [.26, 3.5, .5], '#d4b385', [-.9, 2.8, 2.7]);
-    box(wall, [.26, 3.5, .5], '#c5a175', [.9, 2.8, 2.7]);
-    const arch = mesh(wall, new THREE.TorusGeometry(.75, .19, 5, 12, Math.PI), '#d7b98b', [0, 3.8, 2.7]);
-    box(wall, [1.99, .24, .7], '#d5b486', [0, 4.65, 2.7]);
-    if (i % 4 === 1) {
-      box(wall, [.7, 1.7, .035], '#8e3327', [0, 2.7, -.6]);
-      const crest = mesh(wall, new THREE.OctahedronGeometry(.2), '#d2aa55', [0, 2.9, -.635]); crest.scale.z = .1;
-      box(wall, [1, .08, .12], '#503f2c', [0, 3.6, -.62]);
-    }
-  }
-  // Human-scale seated spectators, placed in rows rather than scattered tiny cones.
-  // Instancing keeps the more detailed crowd to a handful of draw calls.
-  const crowdColors = ['#633d2c', '#647267', '#963f36', '#52697d', '#b18349'];
-  const crowdCount = 144;
-  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(.23, 8, 6), material('#bf936d'), crowdCount);
-  const hair = new THREE.InstancedMesh(new THREE.SphereGeometry(.235, 8, 5, 0, Math.PI * 2, 0, Math.PI * .47), material('#4c392b'), crowdCount);
-  const arms = new THREE.InstancedMesh(new THREE.CylinderGeometry(.075, .085, 1, 6), material('#bf936d'), crowdCount * 2);
-  const hands = new THREE.InstancedMesh(new THREE.SphereGeometry(.095, 6, 5), material('#bf936d'), crowdCount * 2);
-  const legs = new THREE.InstancedMesh(new THREE.CylinderGeometry(.115, .10, .43, 6), material('#655543'), crowdCount * 2);
-  const bodies = crowdColors.map(color => new THREE.InstancedMesh(new THREE.CylinderGeometry(.26, .28, .64, 8), material(color), crowdCount));
-  const bodyCounts = crowdColors.map(() => 0);
-  const seat = new THREE.Object3D(), part = new THREE.Object3D(), matrix = new THREE.Matrix4();
-  const up = new THREE.Vector3(0, 1, 0);
-  function placeCrowdPart(object, index, position, rotationX = 0) {
-    part.position.set(...position); part.rotation.set(rotationX, 0, 0); part.scale.set(1, 1, 1); part.updateMatrix();
-    matrix.multiplyMatrices(seat.matrix, part.matrix); object.setMatrixAt(index, matrix);
-  }
-  for (let i = 0; i < crowdCount; i++) {
-    const row = Math.floor(i / 48), column = i % 48;
-    const angle = Math.PI * .49 + (column + .5 + (row % 2) * .23) / 48 * Math.PI * 1.02;
-    const radius = 12.7 + row * .75;
-    seat.position.set(Math.sin(angle) * radius, 1.74 + row * .55, Math.cos(angle) * radius);
-    seat.rotation.y = angle + Math.PI; seat.updateMatrix();
-    const color = (column * 3 + row * 2) % crowdColors.length;
-    placeCrowdPart(bodies[color], bodyCounts[color]++, [0, .4, 0]);
-    placeCrowdPart(heads, i, [0, .94, 0]);
-    placeCrowdPart(hair, i, [0, .96, 0]);
-    for (const [limb, sign] of [[0, -1], [1, 1]]) {
-      const index = i * 2 + limb, cheering = (column + row * 3) % 5 === 1;
-      const shoulder = new THREE.Vector3(sign * .28, .65, 0);
-      const hand = new THREE.Vector3(sign * (cheering ? .46 : .36), cheering ? 1.28 : .17, .12);
-      const direction = hand.clone().sub(shoulder);
-      part.position.copy(shoulder).add(hand).multiplyScalar(.5);
-      part.quaternion.setFromUnitVectors(up, direction.clone().normalize()); part.scale.set(1, direction.length(), 1); part.updateMatrix();
-      matrix.multiplyMatrices(seat.matrix, part.matrix); arms.setMatrixAt(index, matrix);
-      placeCrowdPart(hands, index, hand.toArray());
-      placeCrowdPart(legs, index, [sign * .14, .03, .24], Math.PI / 2);
-    }
-  }
-  bodies.forEach((body, index) => { body.count = bodyCounts[index]; arenaSet.add(body); });
-  arenaSet.add(heads, hair, arms, hands, legs);
-  // Monumental entrance behind the combatants.
-  box(arenaSet, [3.6, 3.6, .6], '#a77e55', [0, 1.8, -12.2]);
-  box(arenaSet, [2.1, 2.7, .64], '#40362b', [0, 1.35, -11.8]);
-  for (let i = -3; i <= 3; i++) box(arenaSet, [.065, 2.7, .08], '#807154', [i * .27, 1.35, -11.42]);
-  mesh(arenaSet, new THREE.TorusGeometry(1.13, .24, 6, 16, Math.PI), '#d7b785', [0, 2.35, -11.4]);
-  for (let i = 0; i < 30; i++) {
-    const a = random() * Math.PI * 2, radius = 8 + random() * 3;
-    const stone = mesh(arenaSet, new THREE.DodecahedronGeometry(.06 + random() * .12, 0), '#997d58', [Math.sin(a) * radius, .04, Math.cos(a) * radius]); stone.scale.y = .4;
-  }
-  for (let i = 0; i < 9; i++) {
-    const mountain = mesh(scene, new THREE.ConeGeometry(6 + random() * 4, 5 + random() * 5, 5), '#ae9270', [(i - 4) * 9, 1, -38 - random() * 8]); mountain.rotation.y = random(); mountain.castShadow = false;
-  }
-
-  // A separate town set gives the forge and tavern a physical home between bouts.
-  const townSet = new THREE.Group(); townSet.visible = false; scene.add(townSet);
   let townLocation = false, storyChapter = 0;
-  function sign(parent, words, position, width = 2.8) {
-    const surface = document.createElement('canvas'); surface.width = 512; surface.height = 128;
-    const brush = surface.getContext('2d'); brush.fillStyle = '#34251a'; brush.fillRect(0, 0, 512, 128);
-    brush.strokeStyle = '#d6ad65'; brush.lineWidth = 8; brush.strokeRect(6, 6, 500, 116);
-    brush.fillStyle = '#f4d8a0'; brush.font = 'bold 38px Georgia'; brush.textAlign = 'center'; brush.textBaseline = 'middle'; brush.fillText(words, 256, 66, 460);
-    const map = new THREE.CanvasTexture(surface); map.colorSpace = THREE.SRGBColorSpace;
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(width, width / 4), new THREE.MeshStandardMaterial({ map, roughness: 1 })); board.position.set(...position); parent.add(board);
+  // Painted environments replace the block geometry, retaining camera and combat placement.
+  const worldArt = {};
+  for (const name of ['town','arena']) {
+    const texture = new THREE.TextureLoader().load(`assets/world/${name}.png`);
+    texture.colorSpace = THREE.SRGBColorSpace; worldArt[name] = texture;
   }
-  function house(x, z, name, roofColor) {
-    const house = new THREE.Group(); house.position.set(x, 0, z); townSet.add(house);
-    box(house, [3.8, 3.1, 2.8], '#c09b6b', [0, 1.55, 0]);
-    for (const side of [-1, 1]) box(house, [.18, 3.2, 2.95], '#644b32', [side * 1.8, 1.6, 0]);
-    box(house, [3.85, .15, 2.96], '#725035', [0, 2.35, 0]);
-    const roof = mesh(house, new THREE.ConeGeometry(3.25, 1.45, 4), roofColor, [0, 3.8, 0]); roof.rotation.y = Math.PI / 4; roof.scale.z = .82;
-    box(house, [1, 1.9, .08], '#423326', [0, .96, 1.43]);
-    for (const side of [-1, 1]) {
-      box(house, [.66, .75, .1], '#513d29', [side * 1.18, 1.6, 1.45]);
-      box(house, [.045, .75, .12], '#b99354', [side * 1.18, 1.6, 1.51]);
-    }
-    sign(house, name, [0, 2.65, 1.52], 3.1); return house;
-  }
-  house(-5.6, -6.5, 'THE BENT COIN', '#925341');
-  const forge = house(.1, -5, 'BRANN’S FORGE', '#715e48');
-  house(5.7, -7.5, 'CASSIAN’S YARD', '#526665');
-  // Open furnace, chimney and a broad anvil in front of the blacksmith.
-  box(forge, [1.15, 1.4, .95], '#69594b', [-2.15, .7, 1]);
-  box(forge, [.84, .63, .08], '#241d18', [-2.15, .6, 1.5]);
-  const fire = new THREE.Mesh(new THREE.IcosahedronGeometry(.29, 0), new THREE.MeshStandardMaterial({ color: '#ff9a26', emissive: '#ff6118', emissiveIntensity: 2 })); fire.position.set(-2.15, .5, 1.52); fire.scale.y = 1.3; forge.add(fire);
-  box(forge, [.65, 2.9, .65], '#746350', [-2.15, 2.3, 1]);
-  const fireLight = new THREE.PointLight('#ff973d', 7, 5); fireLight.position.set(-2.05, .9, 1.9); forge.add(fireLight);
-  cylinder(townSet, .45, .52, .65, '#614632', [-.8, .33, -1.6]);
-  box(townSet, [1.05, .23, .52], '#54565a', [-.8, .78, -1.6], .7);
-  box(townSet, [.43, .4, .38], '#55514b', [-.8, .56, -1.6], .6);
-  const horn = mesh(townSet, new THREE.ConeGeometry(.23, .55, 6), '#777a79', [-.03, .79, -1.6], null, .7); horn.rotation.z = -Math.PI / 2;
-  for (const [x, z] of [[-4, -2.4], [4.7, -3.8], [5.4, -4.1]]) {
-    cylinder(townSet, .35, .35, .85, '#7c5934', [x, .43, z]);
-    for (const y of [.17, .67]) cylinder(townSet, .365, .365, .07, '#464647', [x, y, z], .6);
-  }
-  // Brann is a shopkeeper in an apron, not another armored opponent.
-  const smith = new THREE.Group(); smith.position.set(-.8, 0, -2.8); townSet.add(smith);
-  for (const side of [-1, 1]) { cylinder(smith, .16, .14, .9, '#594735', [side * .24, .45, 0]); box(smith, [.34, .2, .48], '#3e3329', [side * .24, .12, .1]); }
-  cylinder(smith, .5, .4, .85, '#be9368', [0, 1.35, 0]);
-  box(smith, [.75, .85, .08], '#684431', [0, 1.22, .4]);
-  sphere(smith, [.3, .36, .29], '#c79870', [0, 2.03, 0]);
-  sphere(smith, [.23, .21, .12], '#574031', [0, 1.87, .21]);
-  sphere(smith, [.065, .09, .075], '#c79870', [0, 2.02, .29]);
-  for (const side of [-1, 1]) {
-    sphere(smith, [.05, .027, .018], '#302820', [side * .12, 2.12, .26]);
-    sphere(smith, [.11, .13, .1], '#bd8d62', [side * .57, .94, .03]);
-  }
-  mesh(smith, new THREE.SphereGeometry(.305, 20, 12, 0, Math.PI * 2, 0, Math.PI * .45), '#574031', [0, 2.11, -.035]);
-  for (const side of [-1, 1]) cylinder(smith, .14, .12, .73, '#bd8d62', [side * .57, 1.35, 0]);
-  box(smith, [.07, .48, .07], '#715036', [.6, 1.12, .15]); box(smith, [.35, .18, .2], '#606062', [.6, 1.4, .15], .7);
-
   const characterTextures = new Map();
   function characterTexture(path) {
     if (!characterTextures.has(path)) {
@@ -200,7 +39,7 @@ import * as THREE from 'three';
   // Painted character cutouts stay readable against the 3D environment.
   function makeFighter(data, enemy = false) {
     const root = new THREE.Group(), rig = new THREE.Group(); root.add(rig); scene.add(root);
-    const art = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6), new THREE.MeshBasicMaterial({
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6, 24, 36), new THREE.MeshBasicMaterial({
       map: characterTexture(data.art || 'assets/characters/hero.png'), transparent: true,
       alphaTest: .08, depthWrite: false, side: THREE.DoubleSide, toneMapped: false
     }));
@@ -213,9 +52,12 @@ import * as THREE from 'three';
     shadow.rotation.x = -Math.PI/2; shadow.position.y = .025; root.add(shadow);
     const banner = new THREE.Mesh(new THREE.RingGeometry(.66,.69,48), new THREE.MeshBasicMaterial({ color:data.color, transparent:true, opacity:.7, side:THREE.DoubleSide }));
     banner.rotation.x = -Math.PI/2; banner.position.y = .03; root.add(banner);
+    const slash = new THREE.Mesh(new THREE.RingGeometry(.72,.77,40,1,-.7,Math.PI*1.2), new THREE.MeshBasicMaterial({color:'#fff2bd',transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));
+    slash.position.set(enemy ? -.5 : .5,1.8,.15); rig.add(slash);
+    const rest = new Float32Array(art.geometry.attributes.position.array);
     const size = data.style === 'brute' ? 1.06 : data.style === 'duelist' ? .96 : 1;
     rig.scale.set(size,size,1);
-    return { root, rig, art, banner, enemy, event:null, hitAt:-10, shadowTexture, shadow, size };
+    return { root, rig, art, banner, slash, rest, sway:0, velocity:0, enemy, event:null, hitAt:-10, shadowTexture, shadow, size };
   }
   const fighters = { player: null, enemy: null };
   let graphicsTime = 0, visible = true, lastRender = 0;
@@ -223,7 +65,7 @@ import * as THREE from 'three';
     if (!fighter) return;
     scene.remove(fighter.root);
     fighter.root.traverse(object => { if (object.geometry) object.geometry.dispose(); });
-    fighter.shadowTexture.dispose(); fighter.shadow.material.dispose(); fighter.art.material.dispose(); fighter.banner.material.dispose();
+    fighter.shadowTexture.dispose(); fighter.shadow.material.dispose(); fighter.art.material.dispose(); fighter.banner.material.dispose(); fighter.slash.material.dispose();
   }
   function setFighters(player, enemy) {
     for (const [side, data] of [['player', player], ['enemy', enemy]]) {
@@ -232,8 +74,8 @@ import * as THREE from 'three';
   }
   function animate(side, action) {
     const fighter = fighters[side]; if (!fighter || reduced) return;
-    if (action === 'lunge') fighter.event = { start: graphicsTime, action };
-    if (action === 'hit') fighter.hitAt = graphicsTime;
+    if (action === 'lunge') { fighter.event = { start: graphicsTime, action }; fighter.velocity += fighter.enemy ? -1.4 : 1.4; }
+    if (action === 'hit') { fighter.hitAt = graphicsTime; fighter.velocity += fighter.enemy ? 1.8 : -1.8; }
   }
   function resize() {
     const w = arena.clientWidth, h = arena.clientHeight;
@@ -246,20 +88,31 @@ import * as THREE from 'three';
     document.getElementById('graphics-status').textContent = 'Illustrated mode';
   });
   canvas.addEventListener('webglcontextrestored', () => {
-    arena.classList.add('has-3d'); visible = !document.hidden; document.getElementById('graphics-status').textContent = '3D ARENA';
+    arena.classList.add('has-3d'); visible = !document.hidden; document.getElementById('graphics-status').textContent = 'ANIME WORLD';
   });
   function frame(timestamp) {
     requestAnimationFrame(frame);
     if (!visible || timestamp - lastRender < 1000 / 30) return;
-    graphicsTime += Math.min((timestamp - lastRender) / 1000 || 0, .06); lastRender = timestamp;
+    const dt = Math.min((timestamp - lastRender) / 1000 || 0, .06);
+    graphicsTime += dt; lastRender = timestamp;
     const creating = arena.classList.contains('creating'), mobile = arena.clientWidth < 700;
-    arenaSet.visible = !townLocation; townSet.visible = townLocation;
     const target = new THREE.Vector3(creating && !mobile ? -.1 : 0, creating ? 1.25 : .75, 0);
     // Keep the combat above the command panel, including on short displays.
     camera.position.set(creating ? 5 : 0, mobile ? 7 : 5.1, mobile ? 16 : 12.8);
     camera.fov = mobile ? 44 : 38; camera.lookAt(target); camera.clearViewOffset(); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     const panel = document.getElementById(document.body.dataset.screen === 'creator' ? 'creator' : 'game-panel');
     const panelBox = panel.getBoundingClientRect(), arenaBox = arena.getBoundingClientRect();
+    const background = townLocation ? worldArt.town : worldArt.arena;
+    if (background.image) {
+      scene.background = background;
+      const visibleHeight = panelBox.width > arena.clientWidth * .7 ? Math.max(180, Math.min(arena.clientHeight,panelBox.top-arenaBox.top+20)) : arena.clientHeight;
+      const imageAspect = background.image.width / background.image.height;
+      const viewAspect = arena.clientWidth / visibleHeight;
+      const cropY = 1; // Preserve the complete painted skyline above the control dock.
+      background.repeat.set(Math.min(1,viewAspect/imageAspect),cropY*arena.clientHeight/visibleHeight);
+      background.offset.set((1-background.repeat.x)/2,cropY-background.repeat.y);
+    }
+
     if (panelBox.width > arena.clientWidth * .7) {
       const foot = new THREE.Vector3(creating ? (mobile ? 0 : 2.4) : 2.15, 0, 0).project(camera);
       const screenY = (-foot.y * .5 + .5) * arena.clientHeight;
@@ -277,6 +130,7 @@ import * as THREE from 'three';
       fighter.rig.position.y = reduced ? 0 : Math.sin(graphicsTime * 2.2 + (enemy ? 2 : 0)) * .024;
       // Billboard the artwork toward the camera; the opposing sprite is mirrored.
       fighter.rig.rotation.set(0, Math.atan2(camera.position.x - baseX, camera.position.z), 0);
+      fighter.slash.material.opacity = 0;
       fighter.art.material.color.set(element.classList.contains('guarding') ? '#c6e9ff' : '#ffffff');
       if (fighter.event) {
         const progress = (graphicsTime - fighter.event.start) / .53;
@@ -284,10 +138,29 @@ import * as THREE from 'three';
           const motion = Math.sin(progress * Math.PI);
           fighter.root.position.x += (enemy ? -1 : 1) * motion * 2.5;
           fighter.rig.rotation.z = (enemy ? 1 : -1) * motion * .10;
+          fighter.rig.rotation.y += (enemy ? -1 : 1) * motion * .25;
+          fighter.slash.material.opacity = Math.sin(progress * Math.PI) * .8;
+          fighter.slash.rotation.z = (enemy ? -1 : 1) * progress * 2;
         } else fighter.event = null;
       }
       if (graphicsTime - fighter.hitAt < .28) { fighter.rig.rotation.z += Math.sin((graphicsTime - fighter.hitAt) * 35) * .08; fighter.art.material.color.set('#ffb6a5'); }
       if (element.classList.contains('fallen')) { fighter.rig.rotation.z = enemy ? -1.2 : 1.2; fighter.rig.position.y = .15; }
+      // Damped spring: attacks and hits pull the illustration, then cloth settles.
+      if (!reduced) {
+        fighter.velocity += (-38 * fighter.sway - 9 * fighter.velocity + Math.sin(graphicsTime * 1.8) * .24) * dt;
+        fighter.sway = THREE.MathUtils.clamp(fighter.sway + fighter.velocity * dt, -.13, .13);
+        const positions = fighter.art.geometry.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+          const x = fighter.rest[i*3], y = fighter.rest[i*3+1];
+          const anchor = THREE.MathUtils.smoothstep(y,-1.7,1.4);
+          const cloth = Math.exp(-Math.pow((y+.55)*2.7,2)) * Math.min(1,Math.abs(x)*2);
+          const hair = THREE.MathUtils.smoothstep(y,1.15,1.65);
+          const breeze = Math.sin(graphicsTime*2.3+y*3+x*2)*.012;
+          positions.setX(i,x + fighter.sway*anchor + (breeze+fighter.sway*.45)*(cloth+hair));
+          positions.setY(i,y + Math.sin(graphicsTime*2.2)*.007*anchor);
+        }
+        positions.needsUpdate = true;
+      }
       // Project damage labels from the actual 3D positions instead of fixed percentages.
       const point = new THREE.Vector3(fighter.root.position.x, 3.85, 0).project(camera);
       const nameplate = document.getElementById(`${side}-nameplate`);
@@ -302,11 +175,11 @@ import * as THREE from 'three';
 
   }
   requestAnimationFrame(frame);
-  document.getElementById('graphics-status').textContent = '3D ARENA';
+  document.getElementById('graphics-status').textContent = 'ANIME WORLD';
   function setLocation(town, chapter) {
     townLocation = town; storyChapter = chapter;
     const sky = ['#e7c89a', '#e1ccb0', '#c5aa9c', '#e4c9a3'][storyChapter] || '#e7c89a';
-    scene.background.set(sky); scene.fog.color.set(sky);
+    if (scene.background.isColor) scene.background.set(sky); scene.fog.color.set(sky);
   }
   window.arena3d = { setFighters, animate, setLocation };
 })();
