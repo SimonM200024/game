@@ -75,18 +75,47 @@ import * as THREE from 'three';
       box(wall, [1, .08, .12], '#503f2c', [0, 3.6, -.62]);
     }
   }
-  const crowdColors = ['#633d2c', '#7b6954', '#7b3531', '#556359', '#a37b51'];
-  for (const color of crowdColors) {
-    const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(.11, 5, 4), material('#b6885f'), 48);
-    const bodies = new THREE.InstancedMesh(new THREE.ConeGeometry(.16, .35, 5), material(color), 48);
-    const transform = new THREE.Object3D();
-    for (let i = 0; i < 48; i++) {
-      const a = Math.PI * .49 + random() * Math.PI * 1.02, row = Math.floor(random() * 3), radius = 12.7 + row * .75;
-      transform.position.set(Math.sin(a) * radius, 1.95 + row * .55, Math.cos(a) * radius); transform.updateMatrix(); heads.setMatrixAt(i, transform.matrix);
-      transform.position.y -= .22; transform.updateMatrix(); bodies.setMatrixAt(i, transform.matrix);
-    }
-    scene.add(heads, bodies);
+  // Human-scale seated spectators, placed in rows rather than scattered tiny cones.
+  // Instancing keeps the more detailed crowd to a handful of draw calls.
+  const crowdColors = ['#633d2c', '#647267', '#963f36', '#52697d', '#b18349'];
+  const crowdCount = 144;
+  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(.23, 8, 6), material('#bf936d'), crowdCount);
+  const hair = new THREE.InstancedMesh(new THREE.SphereGeometry(.235, 8, 5, 0, Math.PI * 2, 0, Math.PI * .47), material('#4c392b'), crowdCount);
+  const arms = new THREE.InstancedMesh(new THREE.CylinderGeometry(.075, .085, 1, 6), material('#bf936d'), crowdCount * 2);
+  const hands = new THREE.InstancedMesh(new THREE.SphereGeometry(.095, 6, 5), material('#bf936d'), crowdCount * 2);
+  const legs = new THREE.InstancedMesh(new THREE.CylinderGeometry(.115, .10, .43, 6), material('#655543'), crowdCount * 2);
+  const bodies = crowdColors.map(color => new THREE.InstancedMesh(new THREE.CylinderGeometry(.26, .28, .64, 8), material(color), crowdCount));
+  const bodyCounts = crowdColors.map(() => 0);
+  const seat = new THREE.Object3D(), part = new THREE.Object3D(), matrix = new THREE.Matrix4();
+  const up = new THREE.Vector3(0, 1, 0);
+  function placeCrowdPart(object, index, position, rotationX = 0) {
+    part.position.set(...position); part.rotation.set(rotationX, 0, 0); part.scale.set(1, 1, 1); part.updateMatrix();
+    matrix.multiplyMatrices(seat.matrix, part.matrix); object.setMatrixAt(index, matrix);
   }
+  for (let i = 0; i < crowdCount; i++) {
+    const row = Math.floor(i / 48), column = i % 48;
+    const angle = Math.PI * .49 + (column + .5 + (row % 2) * .23) / 48 * Math.PI * 1.02;
+    const radius = 12.7 + row * .75;
+    seat.position.set(Math.sin(angle) * radius, 1.74 + row * .55, Math.cos(angle) * radius);
+    seat.rotation.y = angle + Math.PI; seat.updateMatrix();
+    const color = (column * 3 + row * 2) % crowdColors.length;
+    placeCrowdPart(bodies[color], bodyCounts[color]++, [0, .4, 0]);
+    placeCrowdPart(heads, i, [0, .94, 0]);
+    placeCrowdPart(hair, i, [0, .96, 0]);
+    for (const [limb, sign] of [[0, -1], [1, 1]]) {
+      const index = i * 2 + limb, cheering = (column + row * 3) % 5 === 1;
+      const shoulder = new THREE.Vector3(sign * .28, .65, 0);
+      const hand = new THREE.Vector3(sign * (cheering ? .46 : .36), cheering ? 1.28 : .17, .12);
+      const direction = hand.clone().sub(shoulder);
+      part.position.copy(shoulder).add(hand).multiplyScalar(.5);
+      part.quaternion.setFromUnitVectors(up, direction.clone().normalize()); part.scale.set(1, direction.length(), 1); part.updateMatrix();
+      matrix.multiplyMatrices(seat.matrix, part.matrix); arms.setMatrixAt(index, matrix);
+      placeCrowdPart(hands, index, hand.toArray());
+      placeCrowdPart(legs, index, [sign * .14, .03, .24], Math.PI / 2);
+    }
+  }
+  bodies.forEach((body, index) => { body.count = bodyCounts[index]; scene.add(body); });
+  scene.add(heads, hair, arms, hands, legs);
   // Monumental entrance behind the combatants.
   box(scene, [3.6, 3.6, .6], '#a77e55', [0, 1.8, -12.2]);
   box(scene, [2.1, 2.7, .64], '#40362b', [0, 1.35, -11.8]);
@@ -211,7 +240,7 @@ import * as THREE from 'three';
     const creating = arena.classList.contains('creating'), mobile = arena.clientWidth < 700;
     const target = new THREE.Vector3(creating && !mobile ? -.1 : 0, creating ? 1.25 : .75, 0);
     // Keep the combat above the command panel, including on short displays.
-    camera.position.set(creating ? 5 : 4.5, mobile ? 7 : 5.1, mobile ? 16 : 12.8);
+    camera.position.set(creating ? 5 : 0, mobile ? 7 : 5.1, mobile ? 16 : 12.8);
     camera.fov = mobile ? 44 : 38; camera.lookAt(target); camera.clearViewOffset(); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     const panel = document.getElementById(document.body.dataset.screen === 'creator' ? 'creator' : 'game-panel');
     const panelBox = panel.getBoundingClientRect(), arenaBox = arena.getBoundingClientRect();
@@ -230,9 +259,12 @@ import * as THREE from 'three';
       const baseX = creating ? (mobile ? 0 : 2.4) : enemy ? 2.15 : -2.15;
       fighter.root.position.set(baseX, 0, 0);
       fighter.rig.position.y = reduced ? 0 : Math.sin(graphicsTime * 2.2 + (enemy ? 2 : 0)) * .024;
-      fighter.rig.rotation.set(0, creating ? -.25 : enemy ? -.72 : .72, 0);
+      // Model forward is +Z. Face exactly along the arena's X axis toward the opponent.
+      fighter.rig.rotation.set(0, creating ? -.25 : enemy ? -Math.PI / 2 : Math.PI / 2, 0);
       fighter.arms[0].rotation.x = element.classList.contains('guarding') ? -1.1 : -.18;
-      fighter.arms[1].rotation.x = -.32;
+      fighter.arms[1].rotation.x = creating ? -.32 : .1;
+      fighter.sword.rotation.x = creating ? .15 : .9;
+      fighter.sword.rotation.z = creating ? -.5 : -.1;
       fighter.legs[0].rotation.x = 0; fighter.legs[1].rotation.x = 0;
       if (fighter.event) {
         const progress = (graphicsTime - fighter.event.start) / .53;
@@ -240,11 +272,11 @@ import * as THREE from 'three';
           const motion = Math.sin(progress * Math.PI);
           fighter.root.position.x += (enemy ? -1 : 1) * motion * 2.5;
           fighter.arms[1].rotation.x = -1.4 + Math.sin(progress * Math.PI * 1.5) * 1.7;
-          fighter.rig.rotation.z = (enemy ? 1 : -1) * motion * .12;
+          fighter.rig.rotation.x = motion * .12;
           fighter.legs[0].rotation.x = motion * .55; fighter.legs[1].rotation.x = -motion * .5;
         } else fighter.event = null;
       }
-      if (graphicsTime - fighter.hitAt < .28) fighter.rig.rotation.z += Math.sin((graphicsTime - fighter.hitAt) * 35) * .12;
+      if (graphicsTime - fighter.hitAt < .28) fighter.rig.rotation.x -= Math.sin((graphicsTime - fighter.hitAt) * 35) * .12;
       if (element.classList.contains('fallen')) { fighter.rig.rotation.z = enemy ? -1.2 : 1.2; fighter.rig.position.y = .15; }
       // Project damage labels from the actual 3D positions instead of fixed percentages.
       const point = new THREE.Vector3(fighter.root.position.x, 3.1, 0).project(camera);
