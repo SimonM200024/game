@@ -2,48 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171127">
-  <title>Starfall — A little cosmic chaos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#201916">
+  <title>Dust & Glory — The Little Gladiator RPG</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app">
+  <div class="app">
     <header class="masthead">
-      <a class="brand" href="./" aria-label="Starfall home"><svg width="32" height="32" viewBox="0 0 40 40" aria-hidden="true"><path d="m20 1 5 13 14 6-14 5-5 14-5-14-14-5 14-6Z" fill="currentColor"/></svg>starfall<span class="brand-period">.</span></a>
-      <span class="edition">SMALL SHIP. BIG PROBLEMS.</span>
-      <div class="game-actions"><button id="sound" class="icon-button" aria-label="Enable sound" aria-pressed="false">SOUND OFF</button><button id="pause" class="icon-button" disabled aria-label="Pause game">II</button></div>
+      <a class="wordmark" href="./"><span class="crest">⚔</span><span>DUST <i>&</i> GLORY<small>THE LITTLE GLADIATOR RPG</small></span></a>
+      <nav aria-label="Game settings"><a href="starfall/">Play Starfall</a><button id="sound" aria-pressed="false">Sound off</button><button id="help">How to play</button></nav>
     </header>
-    <section class="arcade" aria-label="Starfall arcade game">
-      <div class="playfield" id="playfield">
-        <canvas id="game" tabindex="0" aria-label="Move with arrow keys, WASD, or drag. Collect cyan stardust and avoid orange asteroids. Space activates a shield; P pauses."></canvas>
-        <div class="hud" aria-hidden="true">
-          <div class="score-card"><span class="hud-label">STARDUST</span><strong id="score">0000</strong></div>
-          <div class="sector"><span class="live-dot"></span><span id="sector">/ SECTOR 01</span></div>
-          <div class="hud-right"><span class="hud-label">DON’T GET HIT</span><div id="health" class="hearts">◆ ◆ ◆</div></div>
-        </div>
-        <div id="overlay" class="overlay">
-          <div class="overlay-card">
-            <div class="eyebrow" id="overlay-label">A LITTLE COSMIC CHAOS</div>
-            <h1 id="overlay-title">SPACE IS<br><span>A MESS.</span></h1>
-            <p id="overlay-description">Dodge the rocks. Grab the shiny stuff.<br>Try not to become space dust.</p>
-            <button id="start" class="primary-button">LET’S PLAY <span aria-hidden="true">▶</span></button>
-            <span id="overlay-hint" class="overlay-hint">3 LIVES · INFINITE SPACE · ZERO PRESSURE</span>
+
+    <main>
+      <div class="chapter-line"><span><b class="live-dot"></b> THE SUNBLEACHED ARENA</span><span id="chapter">YOUR LEGEND STARTS IN THE DIRT</span></div>
+      <section class="arena-shell" aria-label="Gladiator arena">
+        <div class="arena" id="arena">
+          <svg class="arena-art" viewBox="0 0 1200 580" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#efd7aa"/><stop offset="1" stop-color="#fbebc9"/></linearGradient><linearGradient id="sand" x2="0" y2="1"><stop stop-color="#d9a369"/><stop offset="1" stop-color="#efc48b"/></linearGradient><pattern id="crowd" width="25" height="28" patternUnits="userSpaceOnUse"><circle cx="12" cy="9" r="4" fill="#765846"/><path d="M5 23q0-15 14 0" fill="#8e6b51"/></pattern><pattern id="brick" width="100" height="48" patternUnits="userSpaceOnUse"><path d="M0 0h100v48H0ZM50 0v24M0 24h100" stroke="#9c714f" stroke-width="2" fill="none"/></pattern></defs>
+            <path fill="url(#sky)" d="M0 0h1200v580H0z"/><circle cx="930" cy="94" r="62" fill="#fff3cc"/>
+            <path d="m0 157 150-60 106 55 167-43 145 44 153-65 138 48 194-40 147 56v230H0" fill="#c0a07b" opacity=".35"/>
+            <path d="M-30 145Q600 275 1230 145V394H-30Z" fill="#c69b6d"/><path d="M0 171Q600 305 1200 171V274Q600 375 0 274Z" fill="#8e6a4b"/>
+            <path d="M0 180Q600 315 1200 180v88Q600 367 0 268Z" fill="url(#crowd)"/>
+            <path d="M0 215Q600 345 1200 215M0 245Q600 370 1200 245" fill="none" stroke="#bd9468" stroke-width="8"/>
+            <path d="M0 283Q600 382 1200 283v145H0Z" fill="#c89c6b"/><path d="M0 283Q600 382 1200 283v145H0Z" fill="url(#brick)" opacity=".55"/>
+            <path d="M0 278Q600 379 1200 278" stroke="#e7bc86" stroke-width="18" fill="none"/>
+            <path d="M525 411v-41a75 75 0 0 1 150 0v41" fill="#75543e" stroke="#dfb482" stroke-width="14"/><path d="M540 411v-35a60 60 0 0 1 120 0v35" fill="#302b27"/><path d="M555 411v-74m23 74v-87m23 87v-90m23 90v-87m23 87v-74" stroke="#624833" stroke-width="6"/>
+            <path d="M0 390Q600 441 1200 390v190H0Z" fill="url(#sand)"/>
+            <ellipse cx="600" cy="498" rx="450" ry="57" fill="none" stroke="#aa774a" stroke-width="3" opacity=".32"/>
+            <g fill="#9f3d31" stroke="#64342b" stroke-width="3"><path d="M130 118h47v107l-24-20-23 20Z"/><path d="M1024 118h47v107l-24-20-23 20Z"/></g><g fill="#edc17e"><path d="m153 141 6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z"/><path d="m1047 141 6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z"/></g>
+            <g fill="#b17b50" opacity=".45"><ellipse cx="234" cy="507" rx="12" ry="3"/><ellipse cx="925" cy="467" rx="9" ry="3"/><ellipse cx="759" cy="545" rx="17" ry="3"/><ellipse cx="390" cy="465" rx="7" ry="2"/></g>
+          </svg>
+          <div class="fight-hud" id="fight-hud" hidden>
+            <div class="fighter-card"><div class="fighter-heading"><span id="player-name">Gladiator</span><small id="player-level">LV. 1</small></div><div class="health-track"><div id="player-health-bar"></div></div><div class="resource-line"><b id="player-health">100 / 100</b><span id="player-energy">⚡ 8 / 8</span></div></div>
+            <div class="round-marker"><span id="round-label">BOUT 01</span><b>VS</b></div>
+            <div class="fighter-card enemy-card"><div class="fighter-heading"><span id="enemy-name">Opponent</span><small id="enemy-level">LV. 1</small></div><div class="health-track"><div id="enemy-health-bar"></div></div><div class="resource-line"><b id="enemy-health">100 / 100</b><span id="enemy-energy">⚡ 8 / 8</span></div></div>
           </div>
+          <div class="fighter player-fighter" id="player-figure" aria-hidden="true"></div>
+          <div class="fighter enemy-fighter" id="enemy-figure" aria-hidden="true"></div>
+          <div id="player-float" class="damage-number" aria-hidden="true"></div><div id="enemy-float" class="damage-number" aria-hidden="true"></div>
+          <div class="arena-caption" id="arena-caption"><span>FROM NOBODY</span><strong>TO LEGEND.</strong></div>
+          <div class="intent" id="intent" hidden></div>
+          <div class="arena-bottom"><span>EST. 79 BC <span class="divider">/</span> NO GLORY WITHOUT GRIT.</span><span id="crowd-label">THE CROWD IS WAITING.</span></div>
         </div>
-        <div class="bottom-hud"><div class="shield-status"><span class="shield-dot"></span><span id="shield-label">SHIELD READY</span><kbd>SPACE</kbd></div><span id="combo" class="combo">CHASE THE SHINY STUFF ✦</span></div>
-        <button id="shield" class="touch-shield" aria-label="Activate shield" disabled>SHIELD ◇</button>
-      </div>
-      <div class="game-footer"><span id="status">Your next high score starts here.</span><span class="best-label">BEST RUN <strong id="best">0000</strong><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3-5.6-3-5.6 3 1.2-6.3L1 7.6l6.3-.8Z" fill="currentColor"/></svg></span></div>
-    </section>
-    <section class="guide" aria-label="How to play">
-      <span><kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd> Move</span>
-      <span><kbd>SPACE</kbd> Shield</span>
-      <span><kbd>P</kbd> Pause</span>
-      <span class="touch-tip">On your phone? Just drag to fly.</span>
-    </section>
-    <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
-  </main>
+
+        <section id="creator" class="creator" aria-labelledby="create-title">
+          <div class="creator-heading"><span class="eyebrow">CHAPTER ONE: FRESH MEAT</span><h1 id="create-title">Make a name<br>for yourself.</h1><p>A rusty sword. A handful of coins.<br>Six opponents between you and glory.</p></div>
+          <form id="create-form">
+            <label class="field-label" for="name">WHAT DO THEY CALL YOU?</label><input id="name" maxlength="20" placeholder="Enter your gladiator’s name" value="Rufus" required autocomplete="off">
+            <fieldset><legend>CHOOSE YOUR FIGHTING STYLE</legend><div class="classes"><button type="button" class="class-card selected" data-class="soldier" aria-pressed="true"><span class="class-symbol">⚔</span><strong>Soldier</strong><small>A little of everything.</small></button><button type="button" class="class-card" data-class="brute" aria-pressed="false"><span class="class-symbol">◆</span><strong>Brute</strong><small>Hit hard. Hit again.</small></button><button type="button" class="class-card" data-class="duelist" aria-pressed="false"><span class="class-symbol">ϟ</span><strong>Duelist</strong><small>More energy. More tricks.</small></button></div></fieldset>
+            <div class="creator-bottom"><div class="color-choice" role="group" aria-label="Armor color"><button type="button" data-color="rust" class="swatch selected" style="--swatch:#ac4735" aria-label="Rust armor" aria-pressed="true"></button><button type="button" data-color="teal" class="swatch" style="--swatch:#397a79" aria-label="Teal armor" aria-pressed="false"></button><button type="button" data-color="purple" class="swatch" style="--swatch:#796080" aria-label="Purple armor" aria-pressed="false"></button></div><button class="primary" type="submit">ENTER THE ARENA <span>→</span></button></div>
+            <button type="button" id="continue" class="continue-button" hidden>Continue your saved champion →</button>
+          </form>
+        </section>
+
+        <section id="game-panel" class="game-panel" hidden aria-label="Gladiator controls">
+          <div class="champion-strip"><div><span id="champion-summary"></span><span id="stats-summary"></span></div><div class="purse"><span id="gold">0</span> GOLD <span class="divider">/</span> <span id="xp">0 / 60 XP</span></div></div>
+          <div id="combat-panel" hidden><div class="turn-heading"><span class="eyebrow" id="turn-label">YOUR TURN</span><span id="combat-tip">Choose your move. Every action gives your opponent a turn.</span></div><div class="actions" id="actions"><button data-action="strike"><b>Quick strike</b><span>Reliable · 0 energy</span><kbd>1</kbd></button><button data-action="heavy"><b>Heavy blow</b><span>Risky · 3 energy</span><kbd>2</kbd></button><button data-action="guard"><b>Guard</b><span>Block + regain 2 energy</span><kbd>3</kbd></button><button data-action="recover"><b>Catch breath</b><span>Regain 4 energy</span><kbd>4</kbd></button><button data-action="special"><b>Glory strike</b><span>Big damage · 5 energy</span><kbd>5</kbd></button><button data-action="bandage"><b>Bandage</b><span id="bandage-label">Heal 30 · 2 left</span><kbd>6</kbd></button></div><div id="battle-log" class="battle-log" role="log" aria-live="polite" aria-relevant="additions"></div></div>
+          <div id="camp-panel" class="camp-panel" hidden><div class="camp-heading"><div><span class="eyebrow" id="camp-eyebrow">THE ARMORY</span><h2 id="camp-title">Fortune favors the prepared.</h2><p id="camp-description">Spend your coins, then make the crowd remember you.</p></div><button id="next-fight" class="primary">FIRST FIGHT <span>→</span></button></div><div class="shop"><button id="buy-weapon"><span class="shop-icon">⚔</span><span><b id="weapon-name">Sharpen your blade</b><small id="weapon-info">+3 attack</small></span><strong id="weapon-price">35 G</strong></button><button id="buy-armor"><span class="shop-icon">⬟</span><span><b id="armor-name">Better protection</b><small id="armor-info">+2 defense, +10 health</small></span><strong id="armor-price">30 G</strong></button><button id="buy-training"><span class="shop-icon">ϟ</span><span><b>Train your endurance</b><small id="training-info">+1 maximum energy</small></span><strong id="training-price">45 G</strong></button></div><div class="campaign-track" id="campaign-track" aria-label="Campaign progress"></div><button id="new-character" class="text-button">Start a new character</button><span class="save-note" id="save-note">Progress saves automatically between fights.</span></div>
+        </section>
+      </section>
+      <footer><span>SMALL GLADIATOR. BIG AMBITIONS.</span><span>TURN-BASED. NO RUSH. YOUR MOVE.</span></footer>
+    </main>
+  </div>
+  <dialog id="help-dialog"><button id="close-help" class="close-button" aria-label="Close instructions">×</button><span class="eyebrow">A SURVIVAL GUIDE</span><h2>Win the crowd.<br>Keep your head.</h2><p>Defeat all six arena opponents. Each move you make gives your opponent a turn. Read their next move above the arena before you act.</p><ul><li><b>Quick strike:</b> accurate, free attack.</li><li><b>Heavy blow:</b> stronger, but can miss. Costs 3 energy.</li><li><b>Guard:</b> blocks 70% of the next hit and restores 2 energy.</li><li><b>Catch breath:</b> restores 4 energy, but leaves you open.</li><li><b>Glory strike:</b> powerful and accurate. Costs 5 energy; three-turn cooldown.</li><li><b>Bandage:</b> heals up to 30 health. Two per fight.</li></ul><p>Victories earn gold and XP. Buy gear between fights. Health, energy, and bandages refill for every bout. Defeat costs no gold—you can retry. Progress saves between bouts in this browser.</p><button id="help-done" class="primary">GOT IT. LET’S FIGHT.</button></dialog>
   <script src="game.js"></script>
 </body>
 </html>

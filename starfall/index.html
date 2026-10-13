@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171127">
+  <title>Starfall — A little cosmic chaos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="masthead">
+      <a class="brand" href="./" aria-label="Starfall home"><svg width="32" height="32" viewBox="0 0 40 40" aria-hidden="true"><path d="m20 1 5 13 14 6-14 5-5 14-5-14-14-5 14-6Z" fill="currentColor"/></svg>starfall<span class="brand-period">.</span></a>
+      <span class="edition">SMALL SHIP. BIG PROBLEMS.</span>
+      <div class="game-actions"><button id="sound" class="icon-button" aria-label="Enable sound" aria-pressed="false">SOUND OFF</button><button id="pause" class="icon-button" disabled aria-label="Pause game">II</button></div>
+    </header>
+    <section class="arcade" aria-label="Starfall arcade game">
+      <div class="playfield" id="playfield">
+        <canvas id="game" tabindex="0" aria-label="Move with arrow keys, WASD, or drag. Collect cyan stardust and avoid orange asteroids. Space activates a shield; P pauses."></canvas>
+        <div class="hud" aria-hidden="true">
+          <div class="score-card"><span class="hud-label">STARDUST</span><strong id="score">0000</strong></div>
+          <div class="sector"><span class="live-dot"></span><span id="sector">/ SECTOR 01</span></div>
+          <div class="hud-right"><span class="hud-label">DON’T GET HIT</span><div id="health" class="hearts">◆ ◆ ◆</div></div>
+        </div>
+        <div id="overlay" class="overlay">
+          <div class="overlay-card">
+            <div class="eyebrow" id="overlay-label">A LITTLE COSMIC CHAOS</div>
+            <h1 id="overlay-title">SPACE IS<br><span>A MESS.</span></h1>
+            <p id="overlay-description">Dodge the rocks. Grab the shiny stuff.<br>Try not to become space dust.</p>
+            <button id="start" class="primary-button">LET’S PLAY <span aria-hidden="true">▶</span></button>
+            <span id="overlay-hint" class="overlay-hint">3 LIVES · INFINITE SPACE · ZERO PRESSURE</span>
+          </div>
+        </div>
+        <div class="bottom-hud"><div class="shield-status"><span class="shield-dot"></span><span id="shield-label">SHIELD READY</span><kbd>SPACE</kbd></div><span id="combo" class="combo">CHASE THE SHINY STUFF ✦</span></div>
+        <button id="shield" class="touch-shield" aria-label="Activate shield" disabled>SHIELD ◇</button>
+      </div>
+      <div class="game-footer"><span id="status">Your next high score starts here.</span><span class="best-label">BEST RUN <strong id="best">0000</strong><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3-5.6-3-5.6 3 1.2-6.3L1 7.6l6.3-.8Z" fill="currentColor"/></svg></span></div>
+    </section>
+    <section class="guide" aria-label="How to play">
+      <span><kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd> Move</span>
+      <span><kbd>SPACE</kbd> Shield</span>
+      <span><kbd>P</kbd> Pause</span>
+      <span class="touch-tip">On your phone? Just drag to fly.</span>
+    </section>
+    <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

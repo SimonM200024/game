@@ -1,0 +1,14 @@
+{
+  "name": "dust-and-glory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A standalone turn-based gladiator browser RPG",
+  "scripts": {
+    "test": "node tests/browser.cjs",
+    "test:classes": "node tests/browser.cjs soldier && node tests/browser.cjs brute && node tests/browser.cjs duelist",
+    "check": "node --check game.js && node --check starfall/game.js"
+  },
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}
