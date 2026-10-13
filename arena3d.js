@@ -53,13 +53,14 @@ import * as THREE from 'three';
   const sandMap = new THREE.CanvasTexture(textureCanvas); sandMap.wrapS = sandMap.wrapT = THREE.RepeatWrapping; sandMap.repeat.set(7, 7); sandMap.colorSpace = THREE.SRGBColorSpace;
   const ground = new THREE.Mesh(new THREE.CircleGeometry(43, 96), new THREE.MeshStandardMaterial({ map: sandMap, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(6.9, 7, 90), material('#a2865c')); ring.rotation.x = -Math.PI / 2; ring.position.y = .015; scene.add(ring);
-  const inner = new THREE.Mesh(new THREE.RingGeometry(3.5, 3.54, 90), material('#b39669')); inner.rotation.x = -Math.PI / 2; inner.position.y = .016; scene.add(inner);
+  const arenaSet = new THREE.Group(); scene.add(arenaSet);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(6.9, 7, 90), material('#a2865c')); ring.rotation.x = -Math.PI / 2; ring.position.y = .015; arenaSet.add(ring);
+  const inner = new THREE.Mesh(new THREE.RingGeometry(3.5, 3.54, 90), material('#b39669')); inner.rotation.x = -Math.PI / 2; inner.position.y = .016; arenaSet.add(inner);
 
   // Open-front colosseum: stepped seating, stone archways, banners and a crowd.
   for (let i = 0; i < 25; i++) {
     const angle = Math.PI * .47 + i / 24 * Math.PI * 1.06;
-    const wall = new THREE.Group(); wall.position.set(Math.sin(angle) * 12, 0, Math.cos(angle) * 12); wall.rotation.y = angle; scene.add(wall);
+    const wall = new THREE.Group(); wall.position.set(Math.sin(angle) * 12, 0, Math.cos(angle) * 12); wall.rotation.y = angle; arenaSet.add(wall);
     box(wall, [1.8, 1.15, 1], '#aa865e', [0, .57, 0]);
     box(wall, [1.96, .18, 1.16], '#d6b382', [0, 1.24, 0]);
     for (let row = 0; row < 3; row++) {
@@ -114,20 +115,71 @@ import * as THREE from 'three';
       placeCrowdPart(legs, index, [sign * .14, .03, .24], Math.PI / 2);
     }
   }
-  bodies.forEach((body, index) => { body.count = bodyCounts[index]; scene.add(body); });
-  scene.add(heads, hair, arms, hands, legs);
+  bodies.forEach((body, index) => { body.count = bodyCounts[index]; arenaSet.add(body); });
+  arenaSet.add(heads, hair, arms, hands, legs);
   // Monumental entrance behind the combatants.
-  box(scene, [3.6, 3.6, .6], '#a77e55', [0, 1.8, -12.2]);
-  box(scene, [2.1, 2.7, .64], '#40362b', [0, 1.35, -11.8]);
-  for (let i = -3; i <= 3; i++) box(scene, [.065, 2.7, .08], '#807154', [i * .27, 1.35, -11.42]);
-  mesh(scene, new THREE.TorusGeometry(1.13, .24, 6, 16, Math.PI), '#d7b785', [0, 2.35, -11.4]);
+  box(arenaSet, [3.6, 3.6, .6], '#a77e55', [0, 1.8, -12.2]);
+  box(arenaSet, [2.1, 2.7, .64], '#40362b', [0, 1.35, -11.8]);
+  for (let i = -3; i <= 3; i++) box(arenaSet, [.065, 2.7, .08], '#807154', [i * .27, 1.35, -11.42]);
+  mesh(arenaSet, new THREE.TorusGeometry(1.13, .24, 6, 16, Math.PI), '#d7b785', [0, 2.35, -11.4]);
   for (let i = 0; i < 30; i++) {
     const a = random() * Math.PI * 2, radius = 8 + random() * 3;
-    const stone = mesh(scene, new THREE.DodecahedronGeometry(.06 + random() * .12, 0), '#997d58', [Math.sin(a) * radius, .04, Math.cos(a) * radius]); stone.scale.y = .4;
+    const stone = mesh(arenaSet, new THREE.DodecahedronGeometry(.06 + random() * .12, 0), '#997d58', [Math.sin(a) * radius, .04, Math.cos(a) * radius]); stone.scale.y = .4;
   }
   for (let i = 0; i < 9; i++) {
     const mountain = mesh(scene, new THREE.ConeGeometry(6 + random() * 4, 5 + random() * 5, 5), '#ae9270', [(i - 4) * 9, 1, -38 - random() * 8]); mountain.rotation.y = random(); mountain.castShadow = false;
   }
+
+  // A separate town set gives the forge and tavern a physical home between bouts.
+  const townSet = new THREE.Group(); townSet.visible = false; scene.add(townSet);
+  let townLocation = false, storyChapter = 0;
+  function sign(parent, words, position, width = 2.8) {
+    const surface = document.createElement('canvas'); surface.width = 512; surface.height = 128;
+    const brush = surface.getContext('2d'); brush.fillStyle = '#34251a'; brush.fillRect(0, 0, 512, 128);
+    brush.strokeStyle = '#d6ad65'; brush.lineWidth = 8; brush.strokeRect(6, 6, 500, 116);
+    brush.fillStyle = '#f4d8a0'; brush.font = 'bold 38px Georgia'; brush.textAlign = 'center'; brush.textBaseline = 'middle'; brush.fillText(words, 256, 66, 460);
+    const map = new THREE.CanvasTexture(surface); map.colorSpace = THREE.SRGBColorSpace;
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(width, width / 4), new THREE.MeshStandardMaterial({ map, roughness: 1 })); board.position.set(...position); parent.add(board);
+  }
+  function house(x, z, name, roofColor) {
+    const house = new THREE.Group(); house.position.set(x, 0, z); townSet.add(house);
+    box(house, [3.8, 3.1, 2.8], '#c09b6b', [0, 1.55, 0]);
+    for (const side of [-1, 1]) box(house, [.18, 3.2, 2.95], '#644b32', [side * 1.8, 1.6, 0]);
+    box(house, [3.85, .15, 2.96], '#725035', [0, 2.35, 0]);
+    const roof = mesh(house, new THREE.ConeGeometry(3.25, 1.45, 4), roofColor, [0, 3.8, 0]); roof.rotation.y = Math.PI / 4; roof.scale.z = .82;
+    box(house, [1, 1.9, .08], '#423326', [0, .96, 1.43]);
+    for (const side of [-1, 1]) {
+      box(house, [.66, .75, .1], '#513d29', [side * 1.18, 1.6, 1.45]);
+      box(house, [.045, .75, .12], '#b99354', [side * 1.18, 1.6, 1.51]);
+    }
+    sign(house, name, [0, 2.65, 1.52], 3.1); return house;
+  }
+  house(-5.6, -6.5, 'THE BENT COIN', '#925341');
+  const forge = house(.1, -5, 'BRANN’S FORGE', '#715e48');
+  house(5.7, -7.5, 'CASSIAN’S YARD', '#526665');
+  // Open furnace, chimney and a broad anvil in front of the blacksmith.
+  box(forge, [1.15, 1.4, .95], '#69594b', [-2.15, .7, 1]);
+  box(forge, [.84, .63, .08], '#241d18', [-2.15, .6, 1.5]);
+  const fire = new THREE.Mesh(new THREE.IcosahedronGeometry(.29, 0), new THREE.MeshStandardMaterial({ color: '#ff9a26', emissive: '#ff6118', emissiveIntensity: 2 })); fire.position.set(-2.15, .5, 1.52); fire.scale.y = 1.3; forge.add(fire);
+  box(forge, [.65, 2.9, .65], '#746350', [-2.15, 2.3, 1]);
+  const fireLight = new THREE.PointLight('#ff973d', 7, 5); fireLight.position.set(-2.05, .9, 1.9); forge.add(fireLight);
+  cylinder(townSet, .45, .52, .65, '#614632', [-.8, .33, -1.6]);
+  box(townSet, [1.05, .23, .52], '#54565a', [-.8, .78, -1.6], .7);
+  box(townSet, [.43, .4, .38], '#55514b', [-.8, .56, -1.6], .6);
+  const horn = mesh(townSet, new THREE.ConeGeometry(.23, .55, 6), '#777a79', [-.03, .79, -1.6], null, .7); horn.rotation.z = -Math.PI / 2;
+  for (const [x, z] of [[-4, -2.4], [4.7, -3.8], [5.4, -4.1]]) {
+    cylinder(townSet, .35, .35, .85, '#7c5934', [x, .43, z]);
+    for (const y of [.17, .67]) cylinder(townSet, .365, .365, .07, '#464647', [x, y, z], .6);
+  }
+  // Brann is a shopkeeper in an apron, not another armored opponent.
+  const smith = new THREE.Group(); smith.position.set(-.8, 0, -2.8); townSet.add(smith);
+  for (const side of [-1, 1]) { cylinder(smith, .16, .14, .9, '#594735', [side * .24, .45, 0]); box(smith, [.34, .2, .48], '#3e3329', [side * .24, .12, .1]); }
+  cylinder(smith, .5, .4, .85, '#be9368', [0, 1.35, 0]);
+  box(smith, [.75, .85, .08], '#684431', [0, 1.22, .4]);
+  sphere(smith, [.3, .36, .29], '#c79870', [0, 2.03, 0]);
+  mesh(smith, new THREE.ConeGeometry(.25, .38, 7), '#574031', [0, 1.82, .23]);
+  for (const side of [-1, 1]) cylinder(smith, .14, .12, .73, '#bd8d62', [side * .57, 1.35, 0]);
+  box(smith, [.07, .48, .07], '#715036', [.6, 1.12, .15]); box(smith, [.35, .18, .2], '#606062', [.6, 1.4, .15], .7);
 
   function makeFighter(data, enemy = false) {
     const root = new THREE.Group(); scene.add(root);
@@ -184,7 +236,7 @@ import * as THREE from 'three';
       sphere(arm, [.14, .14, .15], skin, [0, -.78, .09]);
       arm.rotation.z = sign * .13;
     }
-    const shield = new THREE.Group(); shield.position.set(0, -.48, .2); arms[0].add(shield);
+    const shield = new THREE.Group(); shield.scale.setScalar(1 + Math.min(data.shield || 0, 3) * .07); shield.position.set(0, -.48, .2); arms[0].add(shield);
     const disc = cylinder(shield, .46, .46, .12, bronze, [0, 0, 0], .6, 16); disc.rotation.x = Math.PI / 2;
     const paint = cylinder(shield, .39, .39, .135, cloth, [0, 0, .025], .1, 16); paint.rotation.x = Math.PI / 2;
     sphere(shield, [.14, .14, .09], '#dec180', [0, 0, .13], .75);
@@ -238,6 +290,7 @@ import * as THREE from 'three';
     if (!visible || timestamp - lastRender < 1000 / 30) return;
     graphicsTime += Math.min((timestamp - lastRender) / 1000 || 0, .06); lastRender = timestamp;
     const creating = arena.classList.contains('creating'), mobile = arena.clientWidth < 700;
+    arenaSet.visible = !townLocation; townSet.visible = townLocation;
     const target = new THREE.Vector3(creating && !mobile ? -.1 : 0, creating ? 1.25 : .75, 0);
     // Keep the combat above the command panel, including on short displays.
     camera.position.set(creating ? 5 : 0, mobile ? 7 : 5.1, mobile ? 16 : 12.8);
@@ -286,5 +339,10 @@ import * as THREE from 'three';
   }
   requestAnimationFrame(frame);
   document.getElementById('graphics-status').textContent = '3D ARENA';
-  window.arena3d = { setFighters, animate };
+  function setLocation(town, chapter) {
+    townLocation = town; storyChapter = chapter;
+    const sky = ['#e7c89a', '#e1ccb0', '#c5aa9c', '#e4c9a3'][storyChapter] || '#e7c89a';
+    scene.background.set(sky); scene.fog.color.set(sky);
+  }
+  window.arena3d = { setFighters, animate, setLocation };
 })();

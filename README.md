@@ -1,6 +1,6 @@
 # Dust & Glory
 
-An original turn-based gladiator RPG with a full-window 3D arena, inspired by classic arena games. Create a fighter, read your opponent’s intentions, buy better equipment, and defeat six opponents to become champion.
+An original turn-based gladiator RPG with a full-window 3D arena, inspired by classic arena games. Create a fighter, read your opponent’s intentions, buy better equipment, and travel through four story chapters and defeat twelve rivals to decide the arena’s future.
 
 **Play:** https://simonm200024.github.io/game/
 
@@ -29,9 +29,29 @@ Choose a name, fighting style, and armor color. You begin with 45 gold—enough 
 
 The game fills the browser window. Use **Fullscreen** in the top bar to hide browser chrome on supported browsers; Escape exits fullscreen. Compact control panels scroll internally on small screens. Buttons work with mouse and touch. Sound is optional and off by default. The in-game help explains the rules.
 
-Victories award gold and experience. Every 60 XP increases your level, health, attack, and defense. The armory offers three weapon upgrades, three armor upgrades, and three endurance upgrades. All health, energy, and bandages refill before each fight. Defeat costs no gold and allows a retry.
+Victories award gold and experience. Every 60 XP increases your level, health, attack, and defense. Brann’s Forge offers five weapons, five armor upgrades, and three shields beyond your starter gear. Owned items can be equipped freely, and bonuses come from your equipped gear. Stock unlocks as you win bouts. Cassian offers six endurance lessons. All health, energy, and bandages refill before each fight. Defeat costs no gold and allows a retry.
 
 Progress saves between fights in this browser’s local storage. Reloading during a bout returns you to the last saved camp. Choose **Continue your saved champion** on the title screen to resume. Starting a new character asks before replacing an existing save. The game remains playable when storage is unavailable, but progress then lasts only for that tab.
+
+## Story and town
+
+Your debt papers lead you through four regions, each with three named opponents:
+
+1. **A Name in the Dust** — Redhaven’s Copper Trial.
+2. **The Price of Applause** — the tournament in Highcourt.
+3. **Blood on the Ledger** — Cinderport and the prison quay.
+4. **The Unbroken** — the Crown Arena in Dawnspire.
+
+Each rival has an introduction, a taunt, and a conclusion. Between bouts, a 3D town replaces the arena:
+
+- **Brann’s Forge:** buy and equip named weapons, armor, and shields. Compare their bonuses with your current gear. New purchases equip automatically; swapping owned gear costs nothing.
+- **The Bent Coin:** hear Mira’s chapter-specific rumors and collect one-time rewards for completed jobs.
+- **Cassian’s Yard:** purchase permanent maximum-energy upgrades.
+- **Your Chronicle:** read unlocked chapters, defeated rivals’ stories, and your ending.
+
+After the final fight, choose to tear up the debt charter or rebuild the arena under the fighters’ control. The ending is saved.
+
+Existing saves from the six-fight version upgrade automatically without losing gold, levels, gear, or wins. A previous champion continues into Chapter III. The storage key remains `dust-and-glory-v1` for compatibility; records now use save schema version 2.
 
 ## Development checks
 
@@ -49,13 +69,17 @@ npm run check
 npm test
 npm run test:classes
 npm run test:graphics
+npm run test:campaign
+npm run test:town
 ```
 
 The tests use `/usr/bin/chromium` when available, otherwise Playwright’s installed Chromium. Set `CHROMIUM_PATH` to use another Chromium executable or `BASE_URL` to test a different server. Browser screenshots go into the ignored `test-results/` directory.
 
+`test:campaign` checks save migration, inventory validation, chapter boundaries, and job eligibility. `test:town` checks old saves in the browser, stat changes, free re-equipping, shield purchases, one-time rewards, training, and the alternate ending.
+
 The campaign suite uses the illustrated fallback to keep deterministic rule tests fast. The graphics suite separately verifies actual WebGL rendering, fullscreen entry/exit, desktop/mobile/landscape controls, offline combat, and the no-WebGL fallback.
 
-The browser suite covers character creation, purchases, action locking, cooldowns, all six campaign victories, leveling, save restoration, completed campaigns, help, mobile controls, and the original game. `test:classes` repeats the campaign with Soldier, Brute, and Duelist.
+The browser suite covers character creation, purchases, action locking, cooldowns, all twelve campaign victories, leveling, save restoration, chapter introductions, jobs, equipment switching, endings, mobile controls, and the original game. `test:classes` repeats the campaign with Soldier, Brute, and Duelist.
 
 ## Starfall
 
@@ -63,7 +87,7 @@ The original space arcade game is still playable at [starfall/](starfall/). Use 
 
 ## Editing the 3D graphics
 
-`arena3d.js` contains the Three.js renderer. `game.js` owns combat and saves, and `fullscreen.css` contains the viewport layout. After changing the renderer, regenerate its committed browser bundle:
+`arena3d.js` contains the Three.js renderer. `game.js` owns combat, town interactions, and saves; `campaign.js` contains the chapters, rivals, gear, jobs, and save migration. `fullscreen.css` contains the viewport layout and `town.css` styles shops, dialogue, and the journal. After changing the renderer, regenerate its committed browser bundle:
 
 ```sh
 npm run build:graphics

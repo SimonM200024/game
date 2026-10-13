@@ -26,8 +26,13 @@ mkdirSync('test-results', { recursive: true });
         await page.waitForFunction(() => !document.fullscreenElement);
       }
       await page.locator('#create-form .primary').click();
-      await page.locator('#next-fight').click();
-      await page.locator('[data-action="strike"]').click();
+      await page.screenshot({ path: `test-results/3d-${name}-town.png` });
+      await page.locator('#open-blacksmith').click();
+      await page.locator('[data-item="weapon-1"] button').click();
+      await page.screenshot({ path: `test-results/3d-${name}-forge.png` });
+      await page.locator('#close-town').click();
+      await page.locator('#next-fight').click(); await page.locator('#story-fight').click();
+      await page.locator('[data-action="special"]').click();
       await page.waitForFunction(() => !document.querySelector('[data-action="strike"]').disabled);
       assert.ok(Number((await page.locator('#enemy-health').textContent()).split('/')[0]) < 65);
       await page.locator('[data-action="guard"]').click();
@@ -51,8 +56,8 @@ mkdirSync('test-results', { recursive: true });
     await page.goto(baseUrl);
     assert.equal(await page.evaluate(() => Boolean(window.arena3d)), false);
     assert.equal(await page.locator('.arena-art').isVisible(), true);
-    await page.locator('#create-form .primary').click(); await page.locator('#next-fight').click();
-    await page.locator('[data-action="strike"]').click();
+    await page.locator('#create-form .primary').click(); await page.locator('#next-fight').click(); await page.locator('#story-fight').click();
+    await page.locator('[data-action="special"]').click();
     await page.waitForFunction(() => !document.querySelector('[data-action="strike"]').disabled);
     assert.ok(Number((await page.locator('#enemy-health').textContent()).split('/')[0]) < 65);
   } finally { await fallback.close(); }

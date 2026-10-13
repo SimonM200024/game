@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#201916">
   <title>Dust & Glory — The Little Gladiator RPG</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=3d-2">
-  <link rel="stylesheet" href="fullscreen.css?v=3d-2">
+  <link rel="stylesheet" href="style.css?v=story-1">
+  <link rel="stylesheet" href="fullscreen.css?v=story-1">
+  <link rel="stylesheet" href="town.css?v=story-1">
 </head>
 <body>
   <div class="app">
@@ -17,7 +18,7 @@
     </header>
 
     <main>
-      <div class="chapter-line"><span><b class="live-dot"></b> THE SUNBLEACHED ARENA <em id="graphics-status">ILLUSTRATED MODE</em></span><span id="chapter">YOUR LEGEND STARTS IN THE DIRT</span></div>
+      <div class="chapter-line"><span><b class="live-dot"></b> <span id="location-name">THE SUNBLEACHED ARENA</span> <em id="graphics-status">ILLUSTRATED MODE</em></span><span id="chapter">YOUR LEGEND STARTS IN THE DIRT</span></div>
       <section class="arena-shell" aria-label="Gladiator arena">
         <div class="arena" id="arena">
           <svg class="arena-art" viewBox="0 0 1200 580" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -49,7 +50,7 @@
         </div>
 
         <section id="creator" class="creator" aria-labelledby="create-title">
-          <div class="creator-heading"><span class="eyebrow">CHAPTER ONE: FRESH MEAT</span><h1 id="create-title">Make a name<br>for yourself.</h1><p>A rusty sword. A handful of coins.<br>Six opponents between you and glory.</p></div>
+          <div class="creator-heading"><span class="eyebrow">CHAPTER ONE: FRESH MEAT</span><h1 id="create-title">Make a name<br>for yourself.</h1><p>A rusty sword. A handful of coins.<br>Four chapters. Twelve rivals. A freedom worth fighting for.</p></div>
           <form id="create-form">
             <label class="field-label" for="name">WHAT DO THEY CALL YOU?</label><input id="name" maxlength="20" placeholder="Enter your gladiator’s name" value="Rufus" required autocomplete="off">
             <fieldset><legend>CHOOSE YOUR FIGHTING STYLE</legend><div class="classes"><button type="button" class="class-card selected" data-class="soldier" aria-pressed="true"><span class="class-symbol">⚔</span><strong>Soldier</strong><small>A little of everything.</small></button><button type="button" class="class-card" data-class="brute" aria-pressed="false"><span class="class-symbol">◆</span><strong>Brute</strong><small>Hit hard. Hit again.</small></button><button type="button" class="class-card" data-class="duelist" aria-pressed="false"><span class="class-symbol">ϟ</span><strong>Duelist</strong><small>More energy. More tricks.</small></button></div></fieldset>
@@ -61,14 +62,25 @@
         <section id="game-panel" class="game-panel" hidden aria-label="Gladiator controls">
           <div class="champion-strip"><div><span id="champion-summary"></span><span id="stats-summary"></span></div><div class="purse"><span id="gold">0</span> GOLD <span class="divider">/</span> <span id="xp">0 / 60 XP</span></div></div>
           <div id="combat-panel" hidden><div class="turn-heading"><span class="eyebrow" id="turn-label">YOUR TURN</span><span id="combat-tip">Choose your move. Every action gives your opponent a turn.</span></div><div class="actions" id="actions"><button data-action="strike"><b>Quick strike</b><span>Reliable · 0 energy</span><kbd>1</kbd></button><button data-action="heavy"><b>Heavy blow</b><span>Risky · 3 energy</span><kbd>2</kbd></button><button data-action="guard"><b>Guard</b><span>Block + regain 2 energy</span><kbd>3</kbd></button><button data-action="recover"><b>Catch breath</b><span>Regain 4 energy</span><kbd>4</kbd></button><button data-action="special"><b>Glory strike</b><span>Big damage · 5 energy</span><kbd>5</kbd></button><button data-action="bandage"><b>Bandage</b><span id="bandage-label">Heal 30 · 2 left</span><kbd>6</kbd></button></div><div id="battle-log" class="battle-log" role="log" aria-live="polite" aria-relevant="additions"></div></div>
-          <div id="camp-panel" class="camp-panel" hidden><div class="camp-heading"><div><span class="eyebrow" id="camp-eyebrow">THE ARMORY</span><h2 id="camp-title">Fortune favors the prepared.</h2><p id="camp-description">Spend your coins, then make the crowd remember you.</p></div><button id="next-fight" class="primary">FIRST FIGHT <span>→</span></button></div><div class="shop"><button id="buy-weapon"><span class="shop-icon">⚔</span><span><b id="weapon-name">Sharpen your blade</b><small id="weapon-info">+3 attack</small></span><strong id="weapon-price">35 G</strong></button><button id="buy-armor"><span class="shop-icon">⬟</span><span><b id="armor-name">Better protection</b><small id="armor-info">+2 defense, +10 health</small></span><strong id="armor-price">30 G</strong></button><button id="buy-training"><span class="shop-icon">ϟ</span><span><b>Train your endurance</b><small id="training-info">+1 maximum energy</small></span><strong id="training-price">45 G</strong></button></div><div class="campaign-track" id="campaign-track" aria-label="Campaign progress"></div><button id="new-character" class="text-button">Start a new character</button><span class="save-note" id="save-note">Progress saves automatically between fights.</span></div>
+          <div id="camp-panel" class="camp-panel" hidden><div class="camp-heading"><div><span class="eyebrow" id="camp-eyebrow">THE ARMORY</span><h2 id="camp-title">Fortune favors the prepared.</h2><p id="camp-description">Spend your coins, then make the crowd remember you.</p></div><button id="next-fight" class="primary">FIRST FIGHT <span>→</span></button></div><div class="story-brief"><span id="story-speaker"></span><p id="story-summary"></p><strong id="story-objective"></strong></div>
+            <div class="town-destinations" aria-label="Places in town">
+              <button id="open-blacksmith" data-place="blacksmith"><span class="place-icon">⚒</span><span><b>Brann’s Forge</b><small>Weapons, armor & shields</small></span><em>VISIT →</em></button>
+              <button id="open-tavern" data-place="tavern"><span class="place-icon">♜</span><span><b>The Bent Coin</b><small>Rumors & paid jobs</small></span><em>VISIT →</em></button>
+              <button id="open-training" data-place="training"><span class="place-icon">ϟ</span><span><b>Cassian’s Yard</b><small>Train your endurance</small></span><em>VISIT →</em></button>
+              <button id="open-journal" data-place="journal"><span class="place-icon">▤</span><span><b>Your Chronicle</b><small>Chapters & rival stories</small></span><em>READ →</em></button>
+            </div>
+            <div id="ending-choices" class="ending-choices" hidden><button class="primary" data-ending="freedom">TEAR UP THE CHARTER</button><button class="primary" data-ending="rebuild">REBUILD THE ARENA</button></div>
+            <div class="campaign-track" id="campaign-track" aria-label="Campaign progress"></div><button id="new-character" class="text-button">Start a new character</button><span class="save-note" id="save-note">Progress saves automatically between fights.</span></div>
         </section>
       </section>
       <footer><span>SMALL GLADIATOR. BIG AMBITIONS.</span><span>TURN-BASED. NO RUSH. YOUR MOVE.</span></footer>
     </main>
   </div>
-  <dialog id="help-dialog"><button id="close-help" class="close-button" aria-label="Close instructions">×</button><span class="eyebrow">A SURVIVAL GUIDE</span><h2>Win the crowd.<br>Keep your head.</h2><p>Defeat all six arena opponents. Each move you make gives your opponent a turn. Read their next move above the arena before you act.</p><ul><li><b>Quick strike:</b> accurate, free attack.</li><li><b>Heavy blow:</b> stronger, but can miss. Costs 3 energy.</li><li><b>Guard:</b> blocks 70% of the next hit and restores 2 energy.</li><li><b>Catch breath:</b> restores 4 energy, but leaves you open.</li><li><b>Glory strike:</b> powerful and accurate. Costs 5 energy; three-turn cooldown.</li><li><b>Bandage:</b> heals up to 30 health. Two per fight.</li></ul><p>Victories earn gold and XP. Buy gear between fights. Health, energy, and bandages refill for every bout. Defeat costs no gold—you can retry. Progress saves between bouts in this browser.</p><button id="help-done" class="primary">GOT IT. LET’S FIGHT.</button></dialog>
-  <script src="assets/arena3d.bundle.js?v=3d-2"></script>
-  <script src="game.js?v=3d-2"></script>
+  <dialog id="help-dialog"><button id="close-help" class="close-button" aria-label="Close instructions">×</button><span class="eyebrow">A SURVIVAL GUIDE</span><h2>Win the crowd.<br>Keep your head.</h2><p>Travel through four story chapters and defeat twelve named rivals. Visit Brann’s Forge to buy and equip gear, Mira’s tavern for rumors and jobs, and Cassian’s yard for training. Each move you make gives your opponent a turn. Read their next move above the arena before you act.</p><ul><li><b>Quick strike:</b> accurate, free attack.</li><li><b>Heavy blow:</b> stronger, but can miss. Costs 3 energy.</li><li><b>Guard:</b> blocks 70% of the next hit and restores 2 energy.</li><li><b>Catch breath:</b> restores 4 energy, but leaves you open.</li><li><b>Glory strike:</b> powerful and accurate. Costs 5 energy; three-turn cooldown.</li><li><b>Bandage:</b> heals up to 30 health. Two per fight.</li></ul><p>Victories earn gold and XP. Buy gear between fights. Health, energy, and bandages refill for every bout. Defeat costs no gold—you can retry. Progress saves between bouts in this browser.</p><button id="help-done" class="primary">GOT IT. LET’S FIGHT.</button></dialog>
+  <dialog id="town-dialog" class="town-dialog"><button id="close-town" class="close-button" aria-label="Return to town">×</button><div id="town-dialog-content"></div></dialog>
+  <dialog id="story-dialog" class="story-dialog"><button id="close-story" class="close-button" aria-label="Return to town">×</button><span id="story-chapter-label" class="eyebrow"></span><h2 id="story-bout-title"></h2><div class="rival-introduction"><div id="story-portrait" aria-hidden="true"></div><div><span id="story-rival-title"></span><p id="story-intro"></p><blockquote id="story-quote"></blockquote></div></div><div id="story-reward"></div><button id="story-fight" class="primary">ENTER THE ARENA <span>→</span></button></dialog>
+  <script src="campaign.js?v=story-1"></script>
+  <script src="assets/arena3d.bundle.js?v=story-1"></script>
+  <script src="game.js?v=story-1"></script>
 </body>
 </html>
