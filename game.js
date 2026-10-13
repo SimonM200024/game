@@ -343,6 +343,7 @@
       const turned = viewport.classList.toggle('turned'); turn.setAttribute('aria-pressed',String(turned));
     });
     portrait.append(controls,turn);
+    window.arena3d?.inspectCharacter(portrait,{color:COLORS[hero.color],weapon:hero.weapon,armor:hero.armor,shield:hero.shield});
 
     const progress = element('progress', 'character-xp'); progress.max = 60; progress.value = hero.xp; progress.setAttribute('aria-label', 'Experience toward next level');
     content.append(element('p', '', `${hero.xp} / 60 XP · ${60 - hero.xp} XP to level ${hero.level + 1}`), progress);
@@ -359,6 +360,7 @@
     const button = element('button', 'primary', 'VISIT BRANN’S FORGE →'); button.addEventListener('click', () => { townPlace = 'blacksmith'; renderTown(); }); content.append(button);
   }
   function renderTown() {
+    window.arena3d?.stopInspection();
     $('town-dialog').classList.remove('character-dialog');
     $('town-dialog-content').replaceChildren();
     ({ character: renderCharacter, blacksmith: renderSmith, tavern: renderTavern, training: renderTraining, journal: renderJournal })[townPlace]();
@@ -366,6 +368,7 @@
   document.querySelectorAll('[data-place]').forEach(button => button.addEventListener('click', () => {
     if (state !== 'camp') return; townPlace = button.dataset.place; renderTown(); $('town-dialog').showModal();
   }));
+  $('town-dialog').addEventListener('close',()=>window.arena3d?.stopInspection());
   $('close-town').addEventListener('click', () => $('town-dialog').close());
   function introduceRival() {
     if (state !== 'camp' || hero.wins >= OPPONENTS.length) return;

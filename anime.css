@@ -47,3 +47,9 @@ body[data-screen="camp"] .arena { background-image:url('assets/world/town.png');
 .portrait-turn { flex-shrink:0; align-self:center; margin:8px 0; padding:7px 18px; border:1px solid #b4c3b666; border-radius:20px; color:#e8dbba; background:#193746; font-size:11px; }
 .character-portrait { padding-bottom:0; }
 @media(prefers-reduced-motion:reduce) { .portrait-art,.actions button { transition:none; } .actions button:not(:disabled):hover { transform:none; } }
+
+.rigged-preview { width:100%; display:block; cursor:grab; touch-action:none; flex:1; min-height:200px; }
+.rigged-controls { display:grid; grid-template-columns:repeat(2,1fr); gap:5px; padding:8px 0; flex-shrink:0; }
+.rigged-controls button { color:#e9ddb9; background:#244958; border:1px solid #789a99; padding:6px; font-size:10px; border-radius:4px; }
+.model-loading { font-size:11px; color:#d4c59f; text-align:center; }
+@media(max-width:700px){.character-portrait:has(.rigged-preview){height:490px;}.rigged-controls{grid-template-columns:repeat(4,1fr);}}

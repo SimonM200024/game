@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { mkdirSync } = require('node:fs');
 mkdirSync('test-results', { recursive: true });
 (async () => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-webgl'] });
   try {
     for (const [name, width, height] of [['desktop', 1440, 900], ['mobile', 390, 844]]) {
       const page = await browser.newPage({ viewport: { width, height } });

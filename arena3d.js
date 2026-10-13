@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { loadActor, studioLights } from './rigged-character.js';
 
 // This renderer is deliberately separate from combat rules and save data.
 (() => {
@@ -19,6 +20,7 @@ import * as THREE from 'three';
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#e7c89a');
   scene.fog = new THREE.Fog('#e7c89a', 22, 67);
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 110);
+  studioLights(scene);
   let townLocation = false, storyChapter = 0;
   // Painted environments replace the block geometry, retaining camera and combat placement.
   const worldArt = {};
@@ -38,6 +40,7 @@ import * as THREE from 'three';
   }
   // Painted character cutouts stay readable against the 3D environment.
   function makeFighter(data, enemy = false) {
+    document.getElementById('graphics-status').textContent='LOADING 3D…';
     const root = new THREE.Group(), rig = new THREE.Group(); root.add(rig); scene.add(root);
     const art = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6, 24, 36), new THREE.MeshBasicMaterial({
       map: characterTexture(data.art || 'assets/characters/hero.png'), transparent: true,
@@ -57,18 +60,28 @@ import * as THREE from 'three';
     const rest = new Float32Array(art.geometry.attributes.position.array);
     const size = data.style === 'brute' ? 1.06 : data.style === 'duelist' ? .96 : 1;
     rig.scale.set(size,size,1);
-    return { root, rig, art, banner, slash, rest, sway:0, velocity:0, enemy, event:null, hitAt:-10, shadowTexture, shadow, size };
+    const fighter = { root, rig, art, banner, slash, rest, sway:0, velocity:0, enemy, event:null, hitAt:-10, shadowTexture, shadow, size, actor:null, disposed:false, data };
+    loadActor(data,enemy).then(actor => {
+      if (fighter.disposed) { actor.dispose(); return; }
+      fighter.actor = actor; fighter.needsSpringReset = true; rig.add(actor.root); art.visible = false;
+      arena.dataset.rigged = 'true';
+      document.getElementById('graphics-status').textContent='3D ANIME';
+    }).catch(() => { if (!fighter.disposed) document.getElementById('graphics-status').textContent = 'ILLUSTRATED FALLBACK'; });
+    return fighter;
   }
   const fighters = { player: null, enemy: null };
   let graphicsTime = 0, visible = true, lastRender = 0;
   function disposeFighter(fighter) {
     if (!fighter) return;
+    fighter.disposed = true;
+    if (fighter.actor) { fighter.rig.remove(fighter.actor.root); fighter.actor.dispose(); }
     scene.remove(fighter.root);
     fighter.root.traverse(object => { if (object.geometry) object.geometry.dispose(); });
     fighter.shadowTexture.dispose(); fighter.shadow.material.dispose(); fighter.art.material.dispose(); fighter.banner.material.dispose(); fighter.slash.material.dispose();
   }
   function setFighters(player, enemy) {
     for (const [side, data] of [['player', player], ['enemy', enemy]]) {
+      if (data && fighters[side] && JSON.stringify(fighters[side].data) === JSON.stringify(data)) continue;
       disposeFighter(fighters[side]); fighters[side] = data ? makeFighter(data, side === 'enemy') : null;
     }
   }
@@ -76,6 +89,56 @@ import * as THREE from 'three';
     const fighter = fighters[side]; if (!fighter || reduced) return;
     if (action === 'lunge') { fighter.event = { start: graphicsTime, action }; fighter.velocity += fighter.enemy ? -1.4 : 1.4; }
     if (action === 'hit') { fighter.hitAt = graphicsTime; fighter.velocity += fighter.enemy ? 1.8 : -1.8; }
+  }
+  let inspection = null, inspectionGeneration = 0;
+  function stopInspection() {
+    inspectionGeneration++;
+    if (!inspection) return;
+    inspection.actor.dispose(); inspection.renderer.dispose(); inspection = null;
+  }
+  async function inspectCharacter(container, data) {
+    stopInspection(); const token = inspectionGeneration;
+    const loading = document.createElement('p'); loading.className='model-loading'; loading.textContent='Loading animated 3D character…'; container.append(loading);
+    let actor;
+    try { actor = await loadActor(data); }
+    catch { loading.textContent='3D model unavailable. Showing character artwork.'; return; }
+    if (token !== inspectionGeneration || !container.isConnected) { actor.dispose(); return; }
+    const view = document.createElement('canvas'); view.className='rigged-preview'; view.setAttribute('aria-label','Animated 3D character. Drag to rotate.');
+    let display;
+    try { display = new THREE.WebGLRenderer({canvas:view,antialias:true,alpha:true}); }
+    catch { actor.dispose(); loading.textContent='3D preview unavailable.'; return; }
+    display.setPixelRatio(Math.min(devicePixelRatio,1.5)); display.toneMapping=THREE.ACESFilmicToneMapping;
+    const room = new THREE.Scene(); studioLights(room); room.add(actor.root);
+    const lens = new THREE.PerspectiveCamera(34,1,.1,30);
+    const title=document.createElement('div'); title.className='portrait-caption'; title.textContent='LIVE 3D · DRAG TO ROTATE';
+    const controls=document.createElement('div'); controls.className='rigged-controls';
+    const state = {actor,renderer:display,scene:room,camera:lens,container,view,angle:0,zoom:false,mode:'idle',time:0};
+    for (const [label,run] of [
+      ['Turn left',()=>state.angle-=Math.PI/4],['Turn right',()=>state.angle+=Math.PI/4],
+      ['Full character',()=>state.zoom=false],['Face & armor',()=>state.zoom=true],
+      ['Idle',()=>{state.mode='idle';state.time=0;}],['Walk',()=>{state.mode='walk';state.time=0;}],
+      ['Attack',()=>{state.mode='attack';state.time=0;}],['Guard',()=>{state.mode='guard';state.time=0;}]
+    ]) {
+      const button=document.createElement('button');button.type='button';button.textContent=label;
+      button.onclick=()=>{run();view.dataset.angle=String(state.angle);view.dataset.animation=state.mode;};controls.append(button);
+    }
+    let dragging=false,lastX=0;
+    view.addEventListener('pointerdown',event=>{dragging=true;lastX=event.clientX;view.setPointerCapture(event.pointerId);});
+    view.addEventListener('pointermove',event=>{if(dragging){state.angle+=(event.clientX-lastX)*.012;lastX=event.clientX;view.dataset.angle=String(state.angle);}});
+    for(const event of ['pointerup','pointercancel'])view.addEventListener(event,()=>dragging=false);
+    container.replaceChildren(title,view,controls); actor.resetSpring(); inspection=state;
+  }
+  function renderInspection(dt) {
+    if (!inspection) return;
+    const s=inspection; s.time+=dt;
+    const w=s.container.clientWidth,h=Math.max(200,s.container.clientHeight-130);
+    if(s.view.width!==Math.round(w*s.renderer.getPixelRatio()) || s.view.height!==Math.round(h*s.renderer.getPixelRatio()))s.renderer.setSize(w,h,false);
+    s.camera.aspect=w/h;s.camera.position.set(0,s.zoom?2.65:1.8,s.zoom?2.5:6.4);s.camera.lookAt(0,s.zoom?2.7:1.6,0);s.camera.updateProjectionMatrix();
+    s.actor.root.rotation.y=s.angle;
+    const attack=s.mode==='attack' ? Math.min(.999,s.time/.85) : 0;
+    s.actor.update(dt,s.time,{walk:s.mode==='walk'?1:0,attack,guard:s.mode==='guard',reduced});
+    if(s.mode==='attack'&&s.time>.9)s.mode='idle';
+    s.renderer.render(s.scene,s.camera);
   }
   function resize() {
     const w = arena.clientWidth, h = arena.clientHeight;
@@ -129,12 +192,14 @@ import * as THREE from 'three';
       fighter.root.position.set(baseX, 0, 0);
       fighter.rig.position.y = reduced ? 0 : Math.sin(graphicsTime * 2.2 + (enemy ? 2 : 0)) * .024;
       // Billboard the artwork toward the camera; the opposing sprite is mirrored.
-      fighter.rig.rotation.set(0, Math.atan2(camera.position.x - baseX, camera.position.z), 0);
+      fighter.rig.rotation.set(0, fighter.actor ? (creating ? .25 : enemy ? -Math.PI/2 : Math.PI/2) : Math.atan2(camera.position.x - baseX, camera.position.z), 0);
       fighter.slash.material.opacity = 0;
       fighter.art.material.color.set(element.classList.contains('guarding') ? '#c6e9ff' : '#ffffff');
+      let actionProgress = 0, walk = 0;
       if (fighter.event) {
-        const progress = (graphicsTime - fighter.event.start) / .53;
+        const progress = (graphicsTime - fighter.event.start) / .65;
         if (progress < 1) {
+          actionProgress = progress; walk = Math.sin(progress*Math.PI);
           const motion = Math.sin(progress * Math.PI);
           fighter.root.position.x += (enemy ? -1 : 1) * motion * 2.5;
           fighter.rig.rotation.z = (enemy ? 1 : -1) * motion * .10;
@@ -146,7 +211,12 @@ import * as THREE from 'three';
       if (graphicsTime - fighter.hitAt < .28) { fighter.rig.rotation.z += Math.sin((graphicsTime - fighter.hitAt) * 35) * .08; fighter.art.material.color.set('#ffb6a5'); }
       if (element.classList.contains('fallen')) { fighter.rig.rotation.z = enemy ? -1.2 : 1.2; fighter.rig.position.y = .15; }
       // Damped spring: attacks and hits pull the illustration, then cloth settles.
-      if (!reduced) {
+      if (fighter.actor) {
+        if (fighter.needsSpringReset) { fighter.root.updateMatrixWorld(true); fighter.actor.resetSpring(); fighter.needsSpringReset=false; }
+        fighter.rig.position.y = 0; fighter.rig.rotation.z = 0;
+        fighter.actor.update(dt,graphicsTime,{walk,attack:actionProgress,guard:element.classList.contains('guarding'),hit:Math.max(0,1-(graphicsTime-fighter.hitAt)/.3),fallen:element.classList.contains('fallen'),reduced});
+      }
+      if (!reduced && !fighter.actor) {
         fighter.velocity += (-38 * fighter.sway - 9 * fighter.velocity + Math.sin(graphicsTime * 1.8) * .24) * dt;
         fighter.sway = THREE.MathUtils.clamp(fighter.sway + fighter.velocity * dt, -.13, .13);
         const positions = fighter.art.geometry.attributes.position;
@@ -171,7 +241,9 @@ import * as THREE from 'three';
       }
       const label = document.getElementById(`${side}-float`); label.style.left = `${(point.x * .5 + .5) * arena.clientWidth}px`; label.style.top = `${(-point.y * .5 + .5) * arena.clientHeight}px`; label.style.right = 'auto';
     }
+    arena.dataset.riggedActors=String(Object.values(fighters).filter(fighter=>fighter?.actor).length);
     renderer.render(scene, camera);
+    renderInspection(dt);
 
   }
   requestAnimationFrame(frame);
@@ -181,5 +253,5 @@ import * as THREE from 'three';
     const sky = ['#e7c89a', '#e1ccb0', '#c5aa9c', '#e4c9a3'][storyChapter] || '#e7c89a';
     if (scene.background.isColor) scene.background.set(sky); scene.fog.color.set(sky);
   }
-  window.arena3d = { setFighters, animate, setLocation };
+  window.arena3d = { setFighters, animate, setLocation, inspectCharacter, stopInspection };
 })();
