@@ -29,3 +29,15 @@ body[data-screen="camp"] .game-panel{max-height:55%;overflow-y:auto;overscroll-b
 .portrait-fallback svg { width:100%; height:380px; }
 @media(max-width:700px) { .character-dialog #town-dialog-content { padding-left:0; } .character-portrait { position:relative; width:100%; height:410px; min-height:0; margin-bottom:20px; } .character-dialog .merchant-heading h2 { font-size:32px; } }
 .character-dialog > .close-button { z-index:5; background:#18222c; }
+
+.illustrated-character { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 10px 12px #0005); }
+.illustrated-character.facing-left { transform:scaleX(-1); }
+.rival-introduction .illustrated-character { height:260px; }
+.character-portrait { display:flex; flex-direction:column; padding-top:25px; }
+.portrait-art-viewport { flex:1; min-height:0; overflow:hidden; position:relative; }
+.portrait-art { width:100%; height:100%; position:absolute; object-fit:contain; object-position:center bottom; transform-origin:50% 15%; transition:transform .3s ease; filter:drop-shadow(0 16px 22px #0005); }
+.portrait-art-viewport.zoomed .portrait-art { transform:scale(1.85); }
+.portrait-controls { flex-shrink:0; margin-top:8px; }
+.portrait-controls button[aria-pressed="true"] { border-color:#d7b474; color:#f4dca8; background:#34404b; }
+@media(prefers-reduced-motion:reduce) { .portrait-art { transition:none; } }
+@media(max-width:600px) { .rival-introduction .illustrated-character { height:200px; } }

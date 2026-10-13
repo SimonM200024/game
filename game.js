@@ -19,33 +19,24 @@
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
 
-  // All SVG inputs are internal palette values and validated numeric equipment tiers.
-  function avatar(color, style = 'soldier', weapon = 0, armor = 0, facing = false) {
-    const broad = style === 'brute';
-    const metal = armor > 1 ? '#c6c6b4' : armor > 0 ? '#b79459' : '#a47d49';
-    return `<svg viewBox="0 0 180 250" xmlns="http://www.w3.org/2000/svg"><ellipse cx="89" cy="230" rx="62" ry="9" fill="#543920" opacity=".2"/><g ${facing ? 'transform="translate(180 0) scale(-1 1)"' : ''} stroke="#3f3027" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
-      <path d="m66 171-7 43 19 3 10-43m7-2 10 44 19-5-12-44" fill="#c88e60"/><path d="m57 209 23 2v16H47q-5-11 10-18Zm47 0 21-5 14 18-31 5Z" fill="#66503a"/><path d="m62 215 13 2m37-3 12-3" fill="none" stroke="#bb9765" stroke-width="3"/>
-      <path d="M56 113q-12 17-12 39l13 9 15-39m40-9q18 7 20 27l-7 17-13-5-5-24" fill="#c88e60"/>
-      <path d="m62 100-8 61 14 20 50-4 10-21-17-57Z" fill="${color}"/><path d="m65 146-11 24 13 10 9-18 4 19h15l2-20 8 18 15-6-8-27" fill="#624332"/><path d="m62 150 53-1" stroke="#d4ae68" stroke-width="8"/><rect x="81" y="144" width="14" height="13" rx="2" fill="#d2ad62"/>
-      <path d="M62 101q24 17 50-1l${broad ? '8' : '1'} 35q-29 15-51-1Z" fill="${armor > 0 ? metal : color}"/><path d="m72 109 28 22m-27-6 25-10" stroke="${armor > 0 ? '#8e784f' : '#e8ba75'}" stroke-width="3" opacity=".6"/>
-      <path d="m59 99-10 14 19 11 12-19m27-4 11 19 16-10-12-15" fill="${metal}"/>
-      <path d="M72 62q-11 7-5 26l7 8v11q18 13 32-2l-2-12q12-7 9-24Z" fill="#d99c6b"/><path d="m77 88 5 1m15-1 5-2" fill="none" stroke-width="4"/><path d="m90 99 10-1" stroke-width="2.5"/>
-      <path d="M61 75q-5-39 29-41 32 1 31 38l-15-6-4 15-11-17-10 14-7-7-4 21-10-2Z" fill="${metal}"/><path d="M63 60q25-16 54 0" stroke="#e7c382" stroke-width="5"/><path d="M84 37 78 16q19-11 32 5l-7 20" fill="${color}"/><path d="m87 34-2-15m10 14 1-15" stroke="#edcc96" stroke-width="2" opacity=".5"/>
-      <path d="m127 140 14-5 11 9-13 13-12-3Z" fill="#d99c6b"/><g transform="rotate(18 145 130)"><path d="m141 135 2-70 7-19 7 19-6 71Z" fill="${weapon > 1 ? '#f4e6a1' : '#cdd0c5'}"/><path d="m150 57-4 74" stroke="#f6f6dc" stroke-width="2"/><path d="m132 136 29 2" stroke="#d0a253" stroke-width="7"/><path d="m145 140-1 17" stroke="#725137" stroke-width="8"/></g>
-      <path d="M30 136q17-15 37-1v41q-17 25-37-1Z" fill="${color}"/><path d="M35 139q12-8 26 0v32q-12 18-26 0Z" fill="${metal}"/><circle cx="48" cy="154" r="9" fill="#e0c18c"/><path d="m48 147 0 14m-7-7h14" stroke="#8e6a3a" stroke-width="2"/>
-    </g></svg>`;
+  const HERO_ART = 'assets/characters/hero.png';
+  const RIVAL_ART = 'assets/characters/rival.png';
+  function rivalArt(rival) { return /Mara|Nyx|Serra|Cassia|Kestrel/.test(rival?.name || '') ? RIVAL_ART : 'assets/characters/veteran.png'; }
+  function avatar(color, style = 'soldier', weapon = 0, armor = 0, facing = false, art = HERO_ART) {
+    return `<img class="illustrated-character${facing ? ' facing-left' : ''}" src="${art}" alt="" draggable="false">`;
   }
   function drawFighters() {
     document.body.dataset.screen = state;
     $('player-nameplate').hidden = true; $('enemy-nameplate').hidden = true;
     window.arena3d?.setLocation(state === 'camp', hero ? chapterIndex(hero.wins) : 0);
     const data = hero || { color: selectedColor, style: selectedClass, weapon: 0, armor: 0 };
+    $('player-nameplate').style.borderColor = COLORS[data.color];
     window.arena3d?.setFighters(
-      { color: COLORS[data.color], style: data.style, weapon: data.weapon, armor: data.armor, shield: data.shield || 0 },
-      enemy ? { color: enemy.color, style: enemy.style, weapon: Math.min(hero.wins, 3), armor: Math.min(Math.floor(hero.wins / 2), 3) } : null
+      { color: COLORS[data.color], style: data.style, weapon: data.weapon, armor: data.armor, shield: data.shield || 0, art: HERO_ART },
+      enemy ? { art: rivalArt(enemy), color: enemy.color, style: enemy.style, weapon: Math.min(hero.wins, 3), armor: Math.min(Math.floor(hero.wins / 2), 3) } : null
     );
     $('player-figure').innerHTML = avatar(COLORS[data.color], data.style, data.weapon, data.armor);
-    if (enemy) $('enemy-figure').innerHTML = avatar(enemy.color, enemy.style, Math.min(hero.wins, 3), Math.min(Math.floor(hero.wins / 2), 3), true);
+    if (enemy) $('enemy-figure').innerHTML = avatar(enemy.color, enemy.style, Math.min(hero.wins, 3), Math.min(Math.floor(hero.wins / 2), 3), true, rivalArt(enemy));
   }
   function stats() {
     const base = CLASSES[hero.style], weapon = CATALOG.weapon[hero.weapon], armor = CATALOG.armor[hero.armor], shield = CATALOG.shield[hero.shield];
@@ -334,10 +325,20 @@
     const content = $('town-dialog-content');
     $('town-dialog').classList.add('character-dialog');
     const portrait = element('div', 'character-portrait');
-    const caption = element('div', 'portrait-caption', 'DRAG TO ROTATE · YOUR GLADIATOR'); portrait.append(caption);
+    const caption = element('div', 'portrait-caption', 'CHARACTER ART · YOUR GLADIATOR'); portrait.append(caption);
     content.append(portrait);
-    if (window.arena3d) window.arena3d.inspectCharacter(portrait);
-    else { const fallback = element('div', 'portrait-fallback'); fallback.innerHTML = avatar(COLORS[hero.color], hero.style, hero.weapon, hero.armor); portrait.append(fallback); }
+    const viewport = element('div', 'portrait-art-viewport');
+    const artwork = element('img', 'portrait-art'); artwork.src = HERO_ART; artwork.alt = `${hero.name}, illustrated gladiator`; artwork.draggable = false;
+    viewport.append(artwork); portrait.append(viewport);
+    const controls = element('div', 'portrait-controls');
+    for (const [label, zoom] of [['Full character', false], ['Face & armor', true]]) {
+      const button = element('button', '', label); button.type = 'button'; button.setAttribute('aria-pressed', String(!zoom));
+      button.addEventListener('click', () => {
+        viewport.classList.toggle('zoomed', zoom);
+        for (const other of controls.children) other.setAttribute('aria-pressed', String(other === button));
+      }); controls.append(button);
+    }
+    portrait.append(controls);
 
     const progress = element('progress', 'character-xp'); progress.max = 60; progress.value = hero.xp; progress.setAttribute('aria-label', 'Experience toward next level');
     content.append(element('p', '', `${hero.xp} / 60 XP · ${60 - hero.xp} XP to level ${hero.level + 1}`), progress);
@@ -354,7 +355,6 @@
     const button = element('button', 'primary', 'VISIT BRANN’S FORGE →'); button.addEventListener('click', () => { townPlace = 'blacksmith'; renderTown(); }); content.append(button);
   }
   function renderTown() {
-    window.arena3d?.stopInspection();
     $('town-dialog').classList.remove('character-dialog');
     $('town-dialog-content').replaceChildren();
     ({ character: renderCharacter, blacksmith: renderSmith, tavern: renderTavern, training: renderTraining, journal: renderJournal })[townPlace]();
@@ -362,7 +362,6 @@
   document.querySelectorAll('[data-place]').forEach(button => button.addEventListener('click', () => {
     if (state !== 'camp') return; townPlace = button.dataset.place; renderTown(); $('town-dialog').showModal();
   }));
-  $('town-dialog').addEventListener('close', () => window.arena3d?.stopInspection());
   $('close-town').addEventListener('click', () => $('town-dialog').close());
   function introduceRival() {
     if (state !== 'camp' || hero.wins >= OPPONENTS.length) return;
@@ -371,7 +370,7 @@
     $('story-bout-title').textContent = rival.name; $('story-rival-title').textContent = rival.title;
     $('story-intro').textContent = rival.intro; $('story-quote').textContent = `“${rival.quote}”`;
     $('story-reward').textContent = `${chapter.arena} · Victory earns ${rival.gold} gold + ${rival.xp} XP`;
-    $('story-portrait').innerHTML = avatar(rival.color, rival.style, Math.min(hero.wins, 3), Math.min(Math.floor(hero.wins / 2), 3), true);
+    $('story-portrait').innerHTML = avatar(rival.color, rival.style, Math.min(hero.wins, 3), Math.min(Math.floor(hero.wins / 2), 3), true, rivalArt(rival));
     $('story-dialog').showModal();
   }
   $('close-story').addEventListener('click', () => $('story-dialog').close());

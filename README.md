@@ -95,6 +95,6 @@ npm run build:graphics
 
 Commit `assets/arena3d.bundle.js` and its legal-notice file with renderer changes. GitHub Pages serves that bundle directly, so deployment does not require a Node build. Three.js is distributed under the MIT license in `assets/THREE-LICENSE.txt`.
 
-Character presentation now includes smoother human proportions, detailed faces, open helmets, world nameplates, and a Character & equipment sheet with experience, equipped bonuses, and earned reputation. This remains a single-player RPG; no online player population is simulated.
+Character presentation uses original generated anime-style character artwork as transparent sprites inside the 3D world. The character screen offers full-body and face/armor detail views. Rivals share male veteran or female duelist illustrations; these are illustrated designs, not fully rigged 3D models or unique art for all twelve rivals. Equipment purchases still change combat stats; artwork is fixed rather than depicting each equipped item. Banner colors appear on the arena ground marker and player nameplate. Existing saves remain compatible.
 
-The character sheet includes a dedicated lit 3D inspection view: drag the model or use the rotation buttons. Desktop shows the character beside gear; mobile stacks the preview above stats. Run `node tests/portrait.cjs` against the local server to check WebGL inspection, reopen behavior, and return to combat.
+Run `node tests/portrait.cjs` against the local server to check loaded artwork, detail zoom, reopening, rival portraits, and return to combat on desktop and mobile. Character art is bundled locally in `assets/characters/`; no external image service is used during play.
