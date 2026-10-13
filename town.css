@@ -15,3 +15,17 @@ body[data-screen="camp"] .game-panel{max-height:55%;overflow-y:auto;overscroll-b
 .character-stat span { color:#d9e0d3; font-size:12px; }
 .character-xp { width:100%; height:12px; accent-color:#83af9d; }
 @media(max-width:500px) { .world-nameplate { font-size:10px; max-width:160px; white-space:normal; text-align:center; } .character-button span { display:none; } }
+
+.character-dialog { width:min(1120px,calc(100% - 24px)); max-width:1120px; background:radial-gradient(ellipse at 20% 35%,#293541,#10171c 65%); border:1px solid #81909b66; }
+.character-dialog #town-dialog-content { position:relative; padding-left:46%; min-height:620px; }
+.character-portrait { position:absolute; left:0; top:0; bottom:0; width:43%; min-height:430px; background:radial-gradient(ellipse at 50% 70%,#63809b25,transparent 65%); }
+.character-portrait canvas { display:block; width:100%; touch-action:none; cursor:grab; }
+.portrait-caption { position:absolute; top:0; width:100%; text-align:center; font-size:9px; letter-spacing:2px; color:#acb9c4; }
+.portrait-controls { display:flex; justify-content:center; gap:8px; height:40px; }
+.portrait-controls button { background:#19232b; color:#cfdae1; border:1px solid #71839466; padding:8px 12px; font-size:11px; }
+.character-dialog .job-card { background:#23313b80; border-color:#71839444; }
+.character-dialog .character-stat { background:#17242c; border-color:#71839444; }
+.character-dialog .merchant-heading h2 { font-size:42px; color:#f2e7d0; }
+.portrait-fallback svg { width:100%; height:380px; }
+@media(max-width:700px) { .character-dialog #town-dialog-content { padding-left:0; } .character-portrait { position:relative; width:100%; height:410px; min-height:0; margin-bottom:20px; } .character-dialog .merchant-heading h2 { font-size:32px; } }
+.character-dialog > .close-button { z-index:5; background:#18222c; }

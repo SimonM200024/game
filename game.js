@@ -332,6 +332,13 @@
     const rank = hero.wins >= 12 ? 'Champion of the Free' : hero.wins >= 9 ? 'Arena Legend' : hero.wins >= 6 ? 'Crowd Favorite' : hero.wins >= 3 ? 'Proven Gladiator' : 'Arena Initiate';
     shopHeading(hero.name, `LEVEL ${hero.level} ${CLASSES[hero.style].label.toUpperCase()} · ${rank.toUpperCase()}`, 'Your reputation is earned in the arena. Your equipment tells the rest of the story.');
     const content = $('town-dialog-content');
+    $('town-dialog').classList.add('character-dialog');
+    const portrait = element('div', 'character-portrait');
+    const caption = element('div', 'portrait-caption', 'DRAG TO ROTATE · YOUR GLADIATOR'); portrait.append(caption);
+    content.append(portrait);
+    if (window.arena3d) window.arena3d.inspectCharacter(portrait);
+    else { const fallback = element('div', 'portrait-fallback'); fallback.innerHTML = avatar(COLORS[hero.color], hero.style, hero.weapon, hero.armor); portrait.append(fallback); }
+
     const progress = element('progress', 'character-xp'); progress.max = 60; progress.value = hero.xp; progress.setAttribute('aria-label', 'Experience toward next level');
     content.append(element('p', '', `${hero.xp} / 60 XP · ${60 - hero.xp} XP to level ${hero.level + 1}`), progress);
     const grid = element('div', 'character-stats');
@@ -347,12 +354,15 @@
     const button = element('button', 'primary', 'VISIT BRANN’S FORGE →'); button.addEventListener('click', () => { townPlace = 'blacksmith'; renderTown(); }); content.append(button);
   }
   function renderTown() {
+    window.arena3d?.stopInspection();
+    $('town-dialog').classList.remove('character-dialog');
     $('town-dialog-content').replaceChildren();
     ({ character: renderCharacter, blacksmith: renderSmith, tavern: renderTavern, training: renderTraining, journal: renderJournal })[townPlace]();
   }
   document.querySelectorAll('[data-place]').forEach(button => button.addEventListener('click', () => {
     if (state !== 'camp') return; townPlace = button.dataset.place; renderTown(); $('town-dialog').showModal();
   }));
+  $('town-dialog').addEventListener('close', () => window.arena3d?.stopInspection());
   $('close-town').addEventListener('click', () => $('town-dialog').close());
   function introduceRival() {
     if (state !== 'camp' || hero.wins >= OPPONENTS.length) return;

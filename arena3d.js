@@ -15,16 +15,16 @@ import * as THREE from 'three';
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.18;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#e7c89a');
   scene.fog = new THREE.Fog('#e7c89a', 22, 67);
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 110);
-  const light = new THREE.DirectionalLight('#fff0d0', 3.4);
+  const light = new THREE.DirectionalLight('#fff0d0', 2.6);
   light.position.set(-7, 15, 8); light.castShadow = true;
   light.shadow.mapSize.set(2048, 2048);
   Object.assign(light.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: .5, far: 50 });
   light.shadow.normalBias = .035; light.shadow.bias = -.00015;
-  scene.add(light, new THREE.HemisphereLight('#fff1d5', '#695348', 2.2));
+  scene.add(light, new THREE.HemisphereLight('#d5e4ef', '#493b30', 1.3));
   const rim = new THREE.DirectionalLight('#ffba74', 2); rim.position.set(3, 7, -9); scene.add(rim);
   const materials = new Map();
   const material = (color, metalness = 0, roughness = .85) => {
@@ -43,6 +43,21 @@ import * as THREE from 'three';
   const sphere = (parent, size, color, pos, metal = 0) => mesh(parent, new THREE.SphereGeometry(1, 24, 16), color, pos, size, metal);
   const cylinder = (parent, top, bottom, height, color, pos, metal = 0, sides = 12) => mesh(parent, new THREE.CylinderGeometry(top, bottom, height, sides), color, pos, null, metal);
 
+  // Continuous elliptical surfaces avoid the stacked-sphere mannequin silhouette.
+  function sculpt(parent, profile, depth, color, position, metal = 0) {
+    const geometry = new THREE.LatheGeometry(profile.map(([radius, y]) => new THREE.Vector2(radius, y)), 40);
+    geometry.scale(1, 1, depth); geometry.computeVertexNormals();
+    return mesh(parent, geometry, color, position, null, metal);
+  }
+  const grainCanvas = document.createElement('canvas'); grainCanvas.width = grainCanvas.height = 128;
+  const grainBrush = grainCanvas.getContext('2d');
+  const pixels = grainBrush.createImageData(128, 128);
+  for (let i = 0; i < pixels.data.length; i += 4) {
+    const value = 100 + random() * 55;
+    pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = value; pixels.data[i + 3] = 255;
+  }
+  grainBrush.putImageData(pixels, 0, 0);
+  const grain = new THREE.CanvasTexture(grainCanvas); grain.wrapS = grain.wrapT = THREE.RepeatWrapping; grain.repeat.set(4, 4);
   // A locally generated sand texture, with no image downloads or runtime CDN.
   const textureCanvas = document.createElement('canvas'); textureCanvas.width = textureCanvas.height = 512;
   const paint = textureCanvas.getContext('2d'); paint.fillStyle = '#b99868'; paint.fillRect(0, 0, 512, 512);
@@ -192,13 +207,17 @@ import * as THREE from 'three';
     const rig = new THREE.Group(); root.add(rig);
     const skin = enemy ? '#bd885b' : '#d3a073', cloth = data.color, bronze = data.armor > 1 ? '#b4bab7' : '#a98542';
     const leather = '#513c2b', blade = data.weapon > 1 ? '#e2d196' : '#c4cece';
+    for (const color of [skin, leather, cloth, bronze]) {
+      const finish = material(color, color === bronze ? .55 : 0, color === bronze ? .35 : .85);
+      finish.bumpMap = grain; finish.bumpScale = color === skin ? .008 : .018;
+    }
     const legs = [];
     for (const sign of [-1, 1]) {
       const leg = new THREE.Group(); leg.position.set(sign * .25, .99, 0); rig.add(leg); legs.push(leg);
-      cylinder(leg, .17, .14, .55, skin, [0, -.22, 0]);
-      sphere(leg, [.19, .19, .19], bronze, [0, -.46, .09], .55);
+      sculpt(leg, [[.12,-.48],[.155,-.4],[.18,-.23],[.18,-.06],[.12,.06]], .84, skin, [0,0,0]);
+      sphere(leg, [.145, .13, .075], data.armor ? bronze : skin, [0, -.46, .085], data.armor ? .4 : 0);
       cylinder(leg, .15, .12, .43, leather, [0, -.69, 0]);
-      box(leg, [.32, .19, .48], leather, [0, -.92, .11]);
+      sphere(leg, [.16, .11, .26], leather, [0, -.9, .09]);
       box(leg, [.34, .055, .38], '#b79859', [0, -.78, .045], .5);
       box(leg, [.3, .055, .38], '#b79859', [0, -.89, .05], .5);
     }
@@ -210,31 +229,30 @@ import * as THREE from 'three';
     }
     cylinder(rig, .43, .4, .13, '#9c7840', [0, 1.28, 0], .65);
     box(rig, [.2, .16, .08], '#e0bd65', [0, 1.28, .43], .7);
-    sphere(rig, [.46, .47, .34], data.armor ? bronze : cloth, [0, 1.72, 0], data.armor ? .45 : 0);
-    for (const sign of [-1, 1]) sphere(rig, [.23, .16, .055], data.armor ? bronze : cloth, [sign * .20, 1.91, .28], data.armor ? .45 : 0);
-    for (let i = 0; i < 3; i++) box(rig, [.44, .035, .05], '#c4a362', [0, 1.5 + i * .13, .38], .4);
+    sculpt(rig, [[.30,1.28],[.34,1.4],[.37,1.62],[.45,1.9],[.43,2.03],[.27,2.12],[.14,2.16]], .68, data.armor ? bronze : cloth, [0,0,0], data.armor ? .55 : 0);
+    // Diagonal leather harness, seams, and a restrained metal collar.
+    const harness = box(rig, [.10,.84,.045], leather, [.02,1.73,.26]); harness.rotation.z = -.46;
+    for (let i = 0; i < 5; i++) sphere(rig, [.016,.016,.012], '#b99d70', [-.12+i*.07,1.43+i*.15,.295], .45);
     cylinder(rig, .15, .17, .23, skin, [0, 2.19, 0]);
     const head = new THREE.Group(); head.position.y = 2.5; rig.add(head);
     // Smaller skull, tapered jaw, cheekbones and inset eyes instead of a toy face.
-    head.scale.set(.78, .86, .85);
-    sphere(head, [.29, .34, .265], skin, [0, .025, -.02]);
-    sphere(head, [.235, .19, .235], skin, [0, -.16, .025]);
-    sphere(head, [.16, .095, .15], skin, [0, -.275, .075]);
+    head.scale.set(.74, .80, .80);
+    sculpt(head, [[.04,-.30],[.14,-.275],[.205,-.20],[.245,-.08],[.26,.07],[.265,.19],[.22,.29],[.10,.35],[0,.36]], .86, skin, [0,0,0]);
     sphere(head, [.047, .115, .065], skin, [0, -.015, .245]);
     sphere(head, [.066, .044, .07], skin, [0, -.087, .277]);
     for (const sign of [-1, 1]) {
-      sphere(head, [.09, .047, .036], '#855c43', [sign * .12, .045, .237]);
-      sphere(head, [.065, .028, .024], '#e6dac8', [sign * .12, .047, .264]);
-      sphere(head, [.025, .028, .014], '#493b2b', [sign * .116, .048, .285]);
-      sphere(head, [.011, .019, .009], '#211b18', [sign * .116, .048, .296]);
-      const brow = sphere(head, [.09, .02, .025], '#483329', [sign * .12, .107, .249]); brow.rotation.z = sign * .12;
-      sphere(head, [.066, .10, .047], skin, [sign * .29, -.045, -.01]);
-      sphere(head, [.09, .07, .04], skin, [sign * .17, -.08, .218]);
+      sphere(head, [.072, .031, .017], '#855c43', [sign * .12, .045, .209]);
+      sphere(head, [.054, .017, .012], '#e6dac8', [sign * .12, .047, .224]);
+      sphere(head, [.019, .019, .009], '#493b2b', [sign * .116, .048, .237]);
+      sphere(head, [.009, .013, .006], '#211b18', [sign * .116, .048, .246]);
+      const brow = sphere(head, [.09, .02, .025], '#483329', [sign * .12, .092, .214]); brow.rotation.z = sign * .12;
+      sphere(head, [.043, .075, .035], skin, [sign * .26, -.045, -.01]);
+
     }
     sphere(head, [.085, .017, .016], '#915d4b', [0, -.193, .235]);
     sphere(head, [.075, .013, .015], '#bd8770', [0, -.215, .235]);
     // Open helmets leave the face visible. Unarmored recruits wear short hair.
-    mesh(head, new THREE.SphereGeometry(.305, 24, 16, 0, Math.PI * 2, 0, Math.PI * .48), data.armor ? bronze : '#423028', [0, .1, -.035], [1, 1, 1], data.armor ? .5 : 0);
+    sculpt(head, [[.27,.12],[.278,.19],[.235,.29],[.115,.355],[0,.375]], .89, data.armor ? bronze : '#423028', [0,0,0], data.armor ? .5 : 0);
     if (data.armor) {
       cylinder(head, .31, .31, .05, '#d7b46b', [0, .13, -.035], .6, 24);
       for (const side of [-1, 1]) {
@@ -273,6 +291,35 @@ import * as THREE from 'three';
     const size = data.style === 'brute' ? 1.1 : data.style === 'duelist' ? .94 : 1;
     rig.scale.set(size * .82, data.style === 'brute' ? 1.14 : 1.1, size * .88);
     return { root, rig, arms, legs, head, sword, shield, enemy, event: null, hitAt: -10, shadowTexture, shadow, size };
+  }
+  let inspection = null;
+  function stopInspection() {
+    if (!inspection) return;
+    inspection.base.geometry.dispose(); inspection.renderer.dispose(); inspection = null;
+  }
+  function inspectCharacter(container) {
+    stopInspection();
+    if (!fighters.player) return;
+    const view = document.createElement('canvas'); view.setAttribute('aria-label', '3D character preview. Drag to rotate.'); container.append(view);
+    let display;
+    try { display = new THREE.WebGLRenderer({ canvas: view, antialias: true, alpha: true }); } catch { view.remove(); return; }
+    display.setPixelRatio(Math.min(devicePixelRatio, 1.5)); display.toneMapping = THREE.ACESFilmicToneMapping; display.toneMappingExposure = 1.05;
+    const room = new THREE.Scene(), lens = new THREE.PerspectiveCamera(33, 1, .1, 30);
+    room.add(new THREE.HemisphereLight('#c9ddf6','#28201b', 2));
+    const key = new THREE.DirectionalLight('#ffe2be', 3); key.position.set(-3,5,4); room.add(key);
+    const edge = new THREE.DirectionalLight('#8ab5e7', 3); edge.position.set(3,3,-3); room.add(edge);
+    const model = fighters.player.rig.clone(true); room.add(model); model.rotation.set(0,-.35,0); model.position.set(0,0,0);
+    const base = mesh(room, new THREE.CylinderGeometry(.85,.95,.12,48), '#272e34', [0,-.08,0], null,.4);
+    let dragging = false, previous = 0;
+    view.addEventListener('pointerdown', event => { dragging = true; previous = event.clientX; view.setPointerCapture(event.pointerId); });
+    view.addEventListener('pointermove', event => { if (dragging) { model.rotation.y += (event.clientX-previous)*.012; previous = event.clientX; } });
+    view.addEventListener('pointerup', () => { dragging = false; }); view.addEventListener('pointercancel', () => { dragging = false; });
+    const controls = document.createElement('div'); controls.className = 'portrait-controls';
+    for (const [label, delta] of [['Rotate left',-.35],['Rotate right',.35]]) {
+      const button = document.createElement('button'); button.textContent = label; button.type = 'button'; button.onclick = () => { model.rotation.y += delta; }; controls.append(button);
+    }
+    container.append(controls);
+    inspection = { renderer: display, scene: room, camera: lens, container, model, base };
   }
   const fighters = { player: null, enemy: null };
   let graphicsTime = 0, visible = true, lastRender = 0;
@@ -363,6 +410,13 @@ import * as THREE from 'three';
       const label = document.getElementById(`${side}-float`); label.style.left = `${(point.x * .5 + .5) * arena.clientWidth}px`; label.style.top = `${(-point.y * .5 + .5) * arena.clientHeight}px`; label.style.right = 'auto';
     }
     renderer.render(scene, camera);
+    if (inspection) {
+      const { renderer: display, scene: room, camera: lens, container } = inspection;
+      const width = container.clientWidth, height = Math.max(280, container.clientHeight - 44);
+      display.setSize(width, height, false); lens.aspect = width / height;
+      lens.position.set(0, 1.8, 6.5); lens.lookAt(0,1.55,0); lens.updateProjectionMatrix();
+      display.render(room,lens);
+    }
   }
   requestAnimationFrame(frame);
   document.getElementById('graphics-status').textContent = '3D ARENA';
@@ -371,5 +425,5 @@ import * as THREE from 'three';
     const sky = ['#e7c89a', '#e1ccb0', '#c5aa9c', '#e4c9a3'][storyChapter] || '#e7c89a';
     scene.background.set(sky); scene.fog.color.set(sky);
   }
-  window.arena3d = { setFighters, animate, setLocation };
+  window.arena3d = { setFighters, animate, setLocation, inspectCharacter, stopInspection };
 })();

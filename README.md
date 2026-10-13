@@ -96,3 +96,5 @@ npm run build:graphics
 Commit `assets/arena3d.bundle.js` and its legal-notice file with renderer changes. GitHub Pages serves that bundle directly, so deployment does not require a Node build. Three.js is distributed under the MIT license in `assets/THREE-LICENSE.txt`.
 
 Character presentation now includes smoother human proportions, detailed faces, open helmets, world nameplates, and a Character & equipment sheet with experience, equipped bonuses, and earned reputation. This remains a single-player RPG; no online player population is simulated.
+
+The character sheet includes a dedicated lit 3D inspection view: drag the model or use the rotation buttons. Desktop shows the character beside gear; mobile stacks the preview above stats. Run `node tests/portrait.cjs` against the local server to check WebGL inspection, reopen behavior, and return to combat.
